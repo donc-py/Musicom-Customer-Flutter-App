@@ -1,0 +1,4 @@
+storePassword=Mucicom@1234
+keyPassword=Mucicom@1234
+keyAlias=key
+storeFile=/Users/macbookpro/key.jks

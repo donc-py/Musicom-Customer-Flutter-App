@@ -1,0 +1,5 @@
+{
+  "dart.flutterGenerateLocalizationsOnSave": "never",
+  "dart.flutterSdkPath": ".fvm/versions/3.22.3",
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
