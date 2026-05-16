@@ -8,6 +8,7 @@ import 'package:readypos_flutter/models/news/news.dart';
 import 'package:readypos_flutter/models/collection/collection.dart';
 import 'package:readypos_flutter/models/brand/brand.dart';
 import 'package:readypos_flutter/views/auth/login_view.dart';
+import 'package:readypos_flutter/views/auth/register_view.dart';
 import 'package:readypos_flutter/views/cart/cart_view.dart';
 import 'package:readypos_flutter/views/core/core_view.dart';
 import 'package:readypos_flutter/views/draft/draft_screen.dart';
@@ -47,6 +48,7 @@ class Routes {
   static const String splash = '/';
   static const String welcome = '/welcome';
   static const String login = '/login';
+  static const String register = '/register';
   static const String core = '/core';
   static const String pos = '/pos';
   static const String addNewCustomer = '/addNewCustomer';
@@ -90,6 +92,9 @@ Route generatedRoutes(RouteSettings settings) {
       break;
     case Routes.login:
       child = const LoginView();
+      break;
+    case Routes.register: // ← nuevo
+      child = const RegisterView();
       break;
     case Routes.core:
       child = const CoreView();

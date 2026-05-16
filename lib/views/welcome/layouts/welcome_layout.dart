@@ -1,12 +1,6 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:readypos_flutter/config/app_constants.dart';
-import 'package:readypos_flutter/controllers/app_currency_provider.dart';
 import 'package:readypos_flutter/gen/assets.gen.dart';
 import 'package:readypos_flutter/routes.dart';
 import 'package:readypos_flutter/utils/context_less_navigation.dart';
@@ -20,8 +14,7 @@ class WelcomeScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage(
-                'assets/pngs/background.png'), // Add your background image
+            image: AssetImage('assets/pngs/background.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -39,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
                       width: 250.w,
                     ),
                     Text(
-                      'MUCICOM',
+                      'MUSICOM',
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
@@ -54,40 +47,23 @@ class WelcomeScreen extends StatelessWidget {
                 padding: EdgeInsets.all(16.w),
                 child: Column(
                   children: [
-                    Text(
-                      'Crea un account\no',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.sp,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        'entra senza registrarti',
-                        style: TextStyle(
-                          color: Colors.white,
-                          decoration: TextDecoration.underline,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                    ),
                     SizedBox(height: 16.h),
+                    // ── Registrati con Email ──────────────────────────────
+                    _SocialButton(
+                      text: 'Registrati con Email',
+                      icon: Icons.person_add_alt_1,
+                      color: Colors.cyan,
+                      onPressed: () =>
+                          context.nav.pushNamed(Routes.register), // ← registro
+                    ),
+                    SizedBox(height: 8.h),
+                    // ── Continua con Email (login) ────────────────────────
                     _SocialButton(
                       text: 'Continue with Email',
                       icon: Icons.email,
-                      color: Colors.cyan,
+                      color: Colors.cyan.shade700,
                       onPressed: () => context.nav.pushNamed(Routes.login),
                     ),
-                    SizedBox(height: 8.h),
-                    // _SocialButton(
-                    //   text: 'Continua con Facebook',
-                    //   icon: Icons.facebook,
-                    //   color: Colors.blue[900]!,
-                    //   onPressed: () {},
-                    // ),
-                    // Add Apple and Google buttons similarly
                     SizedBox(height: 16.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

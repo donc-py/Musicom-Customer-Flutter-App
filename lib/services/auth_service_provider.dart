@@ -10,6 +10,14 @@ abstract class AuthRepository {
     required String email,
     required String password,
   });
+  Future<Response> register({
+    required String name,
+    required String email,
+    required String phone,
+    required String password,
+    String? phoneCode,
+    String? deviceKey,
+  });
   Future<Response> profileUpdate({
     required Map<String, dynamic> data,
   });
@@ -31,7 +39,34 @@ class AuthService implements AuthRepository {
       "email": email,
       "password": password,
     });
+    return response;
+  }
 
+  @override
+  Future<Response> register({
+    required String name,
+    required String email,
+    required String phone,
+    required String password,
+    String? phoneCode,
+    String? deviceKey,
+  }) async {
+    final Map<String, dynamic> data = {
+      "name": name,
+      "email": email,
+      "phone": phone,
+      "password": password,
+      "password_confirmation": password,
+      "phone_code": phoneCode ?? "+39",
+    };
+
+    if (deviceKey != null) {
+      data["device_key"] = deviceKey;
+    }
+
+    final response = await ref
+        .read(apiClientProvider)
+        .post(AppConstants.registerUrl, data: data);
     return response;
   }
 
@@ -56,5 +91,4 @@ class AuthService implements AuthRepository {
     final response = ref.read(apiClientProvider).get(AppConstants.appcurrency);
     return response;
   }
-  
 }

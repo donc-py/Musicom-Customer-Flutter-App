@@ -3,6 +3,7 @@ class AppConstants {
   // static const String baseUrl = 'https://www.sen.point-cash.org';
   static const String baseUrl = 'https://www.mucicom.it';
   static const String loginUrl = '$baseUrl/api/login';
+  static const String registerUrl = '$baseUrl/api/registration';
   static const String profileUpdate = '$baseUrl/api/profile/update';
   static const String passwordChange = '$baseUrl/api/change/password';
   static const String dashboard = '$baseUrl/api/dashboard';

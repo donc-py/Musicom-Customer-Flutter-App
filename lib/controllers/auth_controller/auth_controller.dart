@@ -31,4 +31,30 @@ class AuthController extends StateNotifier<bool> {
       state = false;
     }
   }
+
+  Future<bool> register({
+    required String name,
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
+    state = true;
+    try {
+      final response = await ref.read(authServiceProvider).register(
+            name: name,
+            email: email,
+            phone: phone,
+            password: password,
+          );
+      Box authBox = Hive.box(AppConstants.authBox);
+      authBox.put(
+          AppConstants.authToken, response.data['data']['access']['token']);
+      authBox.put(AppConstants.userData, response.data['data']['user']);
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      state = false;
+    }
+  }
 }
