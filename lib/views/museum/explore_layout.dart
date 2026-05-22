@@ -1,14 +1,17 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:readypos_flutter/config/app_color.dart';
+import 'package:readypos_flutter/config/app_constants.dart';
 import 'package:readypos_flutter/config/app_text.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:readypos_flutter/controllers/product_controller/product_controller.dart';
+import 'package:readypos_flutter/views/museum/global_search_delegate.dart';
+import 'package:readypos_flutter/controllers/brand_controller/brand.dart';
+import 'package:readypos_flutter/controllers/collection_controller/collection.dart';
+import 'package:readypos_flutter/models/cart_models/hive_cart_model.dart';
 import 'package:readypos_flutter/models/product_model.dart';
 import 'package:readypos_flutter/views/dashboard/components/logo_section.dart';
 import 'package:readypos_flutter/views/core/components/app_drawer.dart';
@@ -21,11 +24,9 @@ class ExploreLayout extends ConsumerStatefulWidget {
 }
 
 class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
-  // ─── ticket state ────────────────────────────────────────────────────────
   int? _expandedTicketIndex;
   final Map<int, int> _quantities = {};
 
-  // ─── static data ─────────────────────────────────────────────────────────
   static const List<Map<String, String>> _orari = [
     {
       'label': 'Apertura',
@@ -48,7 +49,7 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                 .copyWith(fontSize: 20.sp, fontWeight: FontWeight.w700)),
       );
 
-  // ─── quick access row ────────────────────────────────────────────────────
+  // ─── quick access ────────────────────────────────────────────────────────
 
   Widget _quickAccess() {
     final items = [
@@ -69,9 +70,7 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
         final idx = items.indexOf(item);
         return Expanded(
           child: GestureDetector(
-            onTap: () {
-              // scroll to section — simplified with anchor keys if needed
-            },
+            onTap: () {},
             child: Container(
               margin: EdgeInsets.only(right: idx < 2 ? 8.w : 0),
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 14.h),
@@ -102,10 +101,11 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
 
   // ─── biglietti ───────────────────────────────────────────────────────────
 
-  Widget _buildTicketRow(Map<String, dynamic> ticket, int index) {
+  // FIX: recibe Product completo para poder agregarlo al carrito
+  Widget _buildTicketRow(Product ticket, int index) {
     final isExpanded = _expandedTicketIndex == index;
     final qty = _quantities[index] ?? 1;
-    final price = ticket['price'] as double;
+    final price = ticket.price ?? 0.0;
     final total = price * qty;
 
     return AnimatedContainer(
@@ -138,11 +138,11 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(ticket['name'] as String,
+                        Text(ticket.name ?? '',
                             style: AppTextStyle.normalBody
                                 .copyWith(fontWeight: FontWeight.w600)),
-                        if (ticket['sub'] != null)
-                          Text(ticket['sub'] as String,
+                        if (ticket.brand != null)
+                          Text(ticket.brand!,
                               style: AppTextStyle.smallBody.copyWith(
                                   color: Colors.grey, fontSize: 11.sp)),
                       ],
@@ -156,7 +156,7 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
               ),
             ),
           ),
-          // expanded quantity + checkout
+          // expanded: quantity + checkout
           if (isExpanded)
             Padding(
               padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
@@ -206,21 +206,55 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                             style: AppTextStyle.normalBody
                                 .copyWith(fontWeight: FontWeight.w700)),
                         const Spacer(),
-                        SizedBox(
-                          height: 36.h,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // TODO: add to cart / checkout
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColor.primaryColor,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.r)),
-                              padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            ),
-                            child: const Text('Checkout'),
-                          ),
+                        // FIX: botón checkout agrega al carrito Hive
+                        ValueListenableBuilder<Box<HiveCartModel>>(
+                          valueListenable:
+                              Hive.box<HiveCartModel>(AppConstants.cartBox)
+                                  .listenable(),
+                          builder: (context, box, _) {
+                            final inCart =
+                                box.values.any((e) => e.id == ticket.id);
+                            return SizedBox(
+                              height: 36.h,
+                              child: ElevatedButton(
+                                onPressed: inCart
+                                    ? null
+                                    : () async {
+                                        final cartModel = HiveCartModel(
+                                          id: ticket.id,
+                                          name: ticket.name ?? 'Biglietto',
+                                          code: ticket.code ?? '',
+                                          thumbnail: ticket.thumbnail ?? '',
+                                          subTotal: price * qty,
+                                          productsQTY: qty,
+                                        );
+                                        await box.add(cartModel);
+                                        // cerrar el accordion tras añadir
+                                        setState(
+                                            () => _expandedTicketIndex = null);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                          behavior: SnackBarBehavior.floating,
+                                          content: Text(
+                                              '${ticket.name} aggiunto al carrello'),
+                                          backgroundColor: Colors.green,
+                                        ));
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: inCart
+                                      ? Colors.grey
+                                      : AppColor.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.r)),
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 20.w),
+                                ),
+                                child:
+                                    Text(inCart ? 'Nel carrello' : 'Checkout'),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -278,12 +312,10 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                   ],
                 ),
               ),
-              Text(
-                o['hours']!,
-                textAlign: TextAlign.right,
-                style: AppTextStyle.smallBody.copyWith(
-                    decoration: TextDecoration.underline, fontSize: 13.sp),
-              ),
+              Text(o['hours']!,
+                  textAlign: TextAlign.right,
+                  style: AppTextStyle.smallBody.copyWith(
+                      decoration: TextDecoration.underline, fontSize: 13.sp)),
             ],
           ),
         );
@@ -329,7 +361,6 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
       drawer: const AppDrawer(),
       body: Column(
         children: [
-          // header
           Container(
             color: AdaptiveTheme.of(context).mode.isDark
                 ? AppColor.darkBackgroundColor
@@ -337,13 +368,9 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Gap(68.h),
-                const LogoSection(),
-              ],
+              children: [Gap(68.h), const LogoSection()],
             ),
           ),
-          // search bar
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             decoration: BoxDecoration(
@@ -371,20 +398,26 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.search, color: Colors.grey),
-                          Gap(8.w),
-                          Expanded(
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Search (opere, autori)...',
-                                border: InputBorder.none,
-                                hintStyle: TextStyle(fontSize: 14.sp),
-                              ),
-                            ),
+                      child: GestureDetector(
+                        onTap: () => showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(16.r)),
                           ),
-                        ],
+                          builder: (_) => const GlobalSearchSheet(),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.search, color: Colors.grey),
+                            Gap(8.w),
+                            Text('Cerca (opere, autori)...',
+                                style: TextStyle(
+                                    fontSize: 14.sp, color: Colors.grey[400])),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -394,14 +427,12 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
               ),
             ),
           ),
-          // content
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(16.r),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // quick access cards
                   Text('Esplora il MUCICOM',
                       style: AppTextStyle.title.copyWith(
                           fontSize: 22.sp, fontWeight: FontWeight.w700)),
@@ -409,13 +440,13 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                   _quickAccess(),
                   Gap(24.h),
 
-                  // ── Biglietti ──────────────────────────────────────────
+                  // ── Biglietti ────────────────────────────────────────
                   _sectionTitle('Biglietti'),
                   Consumer(builder: (context, ref, _) {
                     final isLoading = ref.watch(productControllerProvider);
                     final products =
                         ref.watch(productControllerProvider.notifier).products;
-                    debugPrint(products.toString());
+                    // FIX: filtrar por nombre "biglietto" (case-insensitive)
                     final tickets = (products ?? [])
                         .where((p) =>
                             p.name?.toLowerCase().contains('biglietto') == true)
@@ -430,22 +461,19 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                               style: AppTextStyle.smallBody
                                   .copyWith(color: Colors.grey)));
                     }
+                    // FIX: pasar Product completo, no .toMap()
                     return Column(
                       children: List.generate(
                         tickets.length,
-                        (i) => _buildTicketRow(tickets[i].toMap(), i),
+                        (i) => _buildTicketRow(tickets[i], i),
                       ),
                     );
                   }),
 
                   Gap(8.h),
-
-                  // ── Orari ──────────────────────────────────────────────
                   _sectionTitle('Orari'),
                   _buildOrariSection(),
                   Gap(8.h),
-
-                  // ── Posizione ──────────────────────────────────────────
                   _sectionTitle('Posizione'),
                   _buildPosizioneSection(),
                   Gap(32.h),

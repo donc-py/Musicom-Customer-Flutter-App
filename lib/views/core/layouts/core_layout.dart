@@ -2,24 +2,17 @@ import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
 import 'package:readypos_flutter/config/app_color.dart';
 import 'package:readypos_flutter/controllers/misc/misc_provider.dart';
 import 'package:readypos_flutter/gen/assets.gen.dart';
 import 'package:readypos_flutter/generated/l10n.dart';
+import 'package:readypos_flutter/utils/barCode_scanner.dart';
 import 'package:readypos_flutter/utils/context_less_navigation.dart';
 import 'package:readypos_flutter/views/dashboard/dashboard_view.dart';
 import 'package:readypos_flutter/views/museum/explore_view.dart';
-import 'package:readypos_flutter/views/museum/museum_hub_view.dart';
 import 'package:readypos_flutter/views/museum/news_list_view.dart';
 import 'package:readypos_flutter/views/pos/pos_view.dart';
-
-// ─── Tab index mapping ────────────────────────────────────────────────────
-// 0 → Dashboard
-// 1 → Explore (Esplora il MUCICOM)
-// 2 → News (Novità)
-// 3 → Cart / POS
 
 class CoreLayout extends ConsumerStatefulWidget {
   const CoreLayout({super.key});
@@ -45,7 +38,7 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
             ..hideCurrentSnackBar()
             ..showSnackBar(
               const SnackBar(
-                content: Text('Press back again to exit'),
+                content: Text('Premi di nuovo per uscire'),
                 behavior: SnackBarBehavior.floating,
                 duration: Duration(seconds: 2),
               ),
@@ -70,7 +63,7 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
           ],
         ),
 
-        // ── Bottom Navigation Bar ──────────────────────────────────────────
+        // ── Bottom Navigation Bar ────────────────────────────────────────
         bottomNavigationBar: Container(
           height: context.isTabletLandsCape ? 110.h : 84.h,
           decoration: BoxDecoration(
@@ -91,16 +84,8 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
-            // 5 slots: [0]Dashboard  [1]Explore  [2]spacer  [3]News  [4]Cart
             children: List<Widget>.generate(5, (index) {
-              if (index == 2) {
-                return SizedBox(width: 30.w); // spacer for FAB
-              }
-              // Map slot index → tab index
-              // slot 0 → tab 0 (Dashboard)
-              // slot 1 → tab 1 (Explore)
-              // slot 3 → tab 2 (News)
-              // slot 4 → tab 3 (Cart)
+              if (index == 2) return SizedBox(width: 30.w); // spacer FAB
               final int itemIndex = index < 2 ? index : index - 1;
               return _BottomNavItem(
                 index: itemIndex,
@@ -111,7 +96,7 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
           ),
         ),
 
-        // ── FAB → Museum Hub (Collezioni + Masterpiece + Artisti) ──────────
+        // ── FAB → Scanner de productos ───────────────────────────────────
         floatingActionButton: keyboardIsOpened
             ? null
             : SizedBox(
@@ -126,13 +111,12 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
                         : 70.h
                     : 55.w,
                 child: FloatingActionButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const MuseumHubView(),
-                      ),
-                    );
-                  },
+                  // FIX: abre el scanner en lugar de MuseumHubView
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ScannerScreen(),
+                    ),
+                  ),
                   elevation: 0,
                   backgroundColor: const Color.fromARGB(255, 195, 228, 192),
                   child: Padding(
@@ -147,7 +131,7 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
   }
 }
 
-// ─── Bottom Nav Item ──────────────────────────────────────────────────────
+// ─── Bottom Nav Item ────────────────────────────────────────────────────────
 
 class _BottomNavItem extends StatelessWidget {
   const _BottomNavItem({
@@ -160,12 +144,11 @@ class _BottomNavItem extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
 
-  // Icons per tab index
   static const List<IconData> _icons = [
-    Icons.dashboard_outlined, // 0 – Dashboard
-    Icons.info_outline, // 1 – Esplora (Info)
-    Icons.article_outlined, // 2 – News / Novità
-    Icons.shopping_cart_outlined, // 3 – Cart
+    Icons.dashboard_outlined,
+    Icons.info_outline,
+    Icons.article_outlined,
+    Icons.shopping_cart_outlined,
   ];
 
   List<String> _labels(BuildContext context) => [

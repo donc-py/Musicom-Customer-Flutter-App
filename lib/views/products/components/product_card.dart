@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -9,13 +8,9 @@ import 'package:readypos_flutter/config/app_color.dart';
 import 'package:readypos_flutter/config/app_text.dart';
 import 'package:readypos_flutter/controllers/app_currency_provider.dart';
 import 'package:readypos_flutter/controllers/misc/misc_provider.dart';
-import 'package:readypos_flutter/controllers/product_controller/product_controller.dart';
-import 'package:readypos_flutter/generated/l10n.dart';
 import 'package:readypos_flutter/models/product_model.dart';
 import 'package:readypos_flutter/utils/context_less_navigation.dart';
-import 'package:readypos_flutter/utils/global_function.dart';
-import 'package:readypos_flutter/views/products/components/item_delete_dialog.dart';
-import 'package:readypos_flutter/views/products/components/product_details_dialog.dart';
+import 'package:readypos_flutter/views/products/components/product_detail_sheet.dart';
 
 class ProductCard extends ConsumerStatefulWidget {
   final Product product;
@@ -25,6 +20,7 @@ class ProductCard extends ConsumerStatefulWidget {
     required this.product,
     this.onTap,
   });
+
   @override
   ConsumerState<ProductCard> createState() => _ProductCardState();
 }
@@ -36,11 +32,20 @@ class _ProductCardState extends ConsumerState<ProductCard> {
   Widget build(BuildContext context) {
     final currency = ref.watch(appcurrencyNotifierProvider.notifier);
     final isLargeScreen = MediaQuery.of(context).size.shortestSide > 600;
+
+    // FIX BUG-012: usar ?? '' para evitar "null" literal en pantalla
+    final category = widget.product.category ?? '';
+    final code = widget.product.code ?? '';
+    final categoryCode =
+        [category, code].where((s) => s.isNotEmpty).join(' | ');
+
     return Stack(
       children: [
         Material(
           child: InkWell(
-            onTap: widget.onTap,
+            // FIX: tap en la card abre el sheet de detalle
+            onTap: widget.onTap ??
+                () => ProductDetailSheet.show(context, product: widget.product),
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 5),
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
@@ -78,70 +83,83 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                                   ),
                                 ),
                                 Gap(2.h),
-                                Text(
-                                  "${widget.product.category} | ${widget.product.code}",
-                                  style: AppTextStyle.smallBody.copyWith(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: AdaptiveTheme.of(context).mode.isDark
-                                        ? Colors.white
-                                        : AppColor.darkBackgroundColor
-                                            .withOpacity(0.6),
-                                    overflow: TextOverflow.ellipsis,
+                                // FIX BUG-012: solo muestra si hay contenido
+                                if (categoryCode.isNotEmpty)
+                                  Text(
+                                    categoryCode,
+                                    style: AppTextStyle.smallBody.copyWith(
+                                      fontSize: 12.sp,
+                                      color:
+                                          AdaptiveTheme.of(context).mode.isDark
+                                              ? Colors.white
+                                              : AppColor.darkBackgroundColor
+                                                  .withOpacity(0.6),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
                                 Gap(5.h),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      widget.product.qty.toString(),
-                                      style: AppTextStyle.smallBody.copyWith(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: AdaptiveTheme.of(context)
-                                                .mode
-                                                .isDark
-                                            ? Colors.white
-                                            : AppColor.darkBackgroundColor,
-                                      ),
-                                    ),
+                                    // FIX BUG-012: qty null → '' en lugar de "null"
+                                    if (widget.product.qty != null)
+                                      Text(
+                                        'Qtà: ${widget.product.qty}',
+                                        style: AppTextStyle.smallBody.copyWith(
+                                          fontSize: 12.sp,
+                                          color: AdaptiveTheme.of(context)
+                                                  .mode
+                                                  .isDark
+                                              ? Colors.white
+                                              : AppColor.darkBackgroundColor,
+                                        ),
+                                      )
+                                    else
+                                      const SizedBox.shrink(),
                                     Row(
                                       children: [
+                                        // FIX BUG-013: formato €XX.XX
                                         Text(
-                                          currency.currencyValue(
-                                              widget.product.price ?? 0),
+                                          '${(widget.product.price ?? 0.0).toStringAsFixed(2)} €',
                                           style:
                                               AppTextStyle.smallBody.copyWith(
                                             color: AppColor.primaryColor,
                                           ),
                                         ),
-                                        Gap(5.w),
-                                        Container(
-                                          width: 4.w,
-                                          height: 4.h,
-                                          decoration: const ShapeDecoration(
-                                            color: AppColor.borderColor,
-                                            shape: OvalBorder(),
+                                        if (widget.product.unit != null &&
+                                            widget.product.unit!.isNotEmpty)
+                                          Row(
+                                            children: [
+                                              Gap(5.w),
+                                              Container(
+                                                width: 4.w,
+                                                height: 4.h,
+                                                decoration:
+                                                    const ShapeDecoration(
+                                                  color: AppColor.borderColor,
+                                                  shape: OvalBorder(),
+                                                ),
+                                              ),
+                                              Gap(5.w),
+                                              Text(
+                                                widget.product.unit!,
+                                                style: AppTextStyle.smallBody
+                                                    .copyWith(
+                                                  fontSize: 12.sp,
+                                                  color: AdaptiveTheme.of(
+                                                              context)
+                                                          .mode
+                                                          .isDark
+                                                      ? Colors.white
+                                                      : AppColor
+                                                          .darkBackgroundColor,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                        Gap(5.w),
-                                        Text(
-                                          widget.product.unit ?? '',
-                                          style:
-                                              AppTextStyle.smallBody.copyWith(
-                                            fontSize: 12.sp,
-                                            fontWeight: FontWeight.w400,
-                                            color: AdaptiveTheme.of(context)
-                                                    .mode
-                                                    .isDark
-                                                ? Colors.white
-                                                : AppColor.darkBackgroundColor,
-                                          ),
-                                        )
                                       ],
-                                    )
+                                    ),
                                   ],
                                 ),
                               ],
@@ -156,6 +174,8 @@ class _ProductCardState extends ConsumerState<ProductCard> {
             ),
           ),
         ),
+
+        // ── menú ⋮ ──────────────────────────────────────────────────────
         Positioned(
           right: 10.w,
           top: isLargeScreen ? 5.r : 0,
@@ -168,61 +188,25 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                 : Colors.white,
             initialValue: selectedMenu,
             onSelected: (PopupMenu value) {
-              ref.read(productId.notifier).state = widget.product.id;
               switch (value) {
                 case PopupMenu.view:
-                  showDialog(
-                      context: context,
-                      builder: (context) => const ProductDetailsDialog());
+                  // FIX BUG-011: abre el ProductDetailSheet en lugar del dialog roto
+                  ProductDetailSheet.show(context, product: widget.product);
                   break;
                 case PopupMenu.delete:
-                  // showDialog(
-                  //   context: context,
-                  //   barrierColor: AdaptiveTheme.of(context).mode.isDark
-                  //       ? Colors.white.withOpacity(0.5)
-                  //       : Colors.black.withOpacity(0.5),
-                  //   builder: (context) => DeleteConfirmationDialog(
-                  //     onPressed: () {
-                  //       ref
-                  //           .read(productControllerProvider.notifier)
-                  //           .deleteProduct(id: widget.product.id)
-                  //           .then((response) {
-                  //         GlobalFunction.showCustomSnackbar(
-                  //           message: response.message,
-                  //           isSuccess: response.isSuccess,
-                  //         );
-                  //         if (response.isSuccess) {
-                  //           ref
-                  //               .read(productControllerProvider.notifier)
-                  //               .getProducts(
-                  //                 page: 1,
-                  //                 perPage: 15,
-                  //                 search: null,
-                  //                 pagination: false,
-                  //               );
-                  //         }
-                  //         context.nav.pop();
-                  //       });
-                  //     },
-                  //   ),
-                  // );
                   break;
               }
             },
             itemBuilder: (context) => [
               PopupMenuItem<PopupMenu>(
                 value: PopupMenu.view,
+                // FIX: texto en italiano
                 child: _buildPopUpItemWidget(
-                    icon: Icons.visibility, name: S.of(context).view),
+                    icon: Icons.visibility, name: 'Dettagli'),
               ),
-              // PopupMenuItem<PopupMenu>(
-              //   value: PopupMenu.delete,
-              //   child: _buildPopUpItemWidget(
-              //       icon: Icons.delete, name: S.of(context).delete),
-              // ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
@@ -232,10 +216,7 @@ class _ProductCardState extends ConsumerState<ProductCard> {
       children: [
         Icon(icon),
         Gap(10.w),
-        Text(
-          name,
-          style: AppTextStyle.normalBody,
-        ),
+        Text(name, style: AppTextStyle.normalBody),
       ],
     );
   }
@@ -250,14 +231,26 @@ class _ProductCardState extends ConsumerState<ProductCard> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.r),
-        child: widget.product.thumbnail != null
+        child: widget.product.thumbnail != null &&
+                widget.product.thumbnail!.isNotEmpty
             ? CachedNetworkImage(
                 imageUrl: widget.product.thumbnail!,
                 width: context.isTabletLandsCape ? 75.w : 64.w,
                 height: context.isTabletLandsCape ? 60.w : 64.h,
                 fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => Container(
+                  width: context.isTabletLandsCape ? 75.w : 64.w,
+                  height: context.isTabletLandsCape ? 60.w : 64.h,
+                  color: Colors.grey[100],
+                  child: Icon(Icons.image, color: Colors.grey[300], size: 24.r),
+                ),
               )
-            : null,
+            : Container(
+                width: context.isTabletLandsCape ? 75.w : 64.w,
+                height: context.isTabletLandsCape ? 60.w : 64.h,
+                color: Colors.grey[100],
+                child: Icon(Icons.image, color: Colors.grey[300], size: 24.r),
+              ),
       ),
     );
   }

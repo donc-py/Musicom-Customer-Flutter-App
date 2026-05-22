@@ -32,9 +32,7 @@ class ProductAppBar extends StatelessWidget {
           Row(
             children: [
               InkWell(
-                onTap: () {
-                  Navigator.pop(context);
-                },
+                onTap: () => Navigator.pop(context),
                 child: Container(
                   width: 40.w,
                   height: 40.h,
@@ -47,10 +45,7 @@ class ProductAppBar extends StatelessWidget {
               ),
               Gap(20.w),
               Expanded(
-                child: Text(
-                  title,
-                  style: AppTextStyle.title,
-                ),
+                child: Text(title, style: AppTextStyle.title),
               ),
             ],
           ),

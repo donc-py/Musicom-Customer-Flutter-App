@@ -6,6 +6,7 @@ import 'package:gap/gap.dart';
 import 'package:readypos_flutter/config/app_color.dart';
 import 'package:readypos_flutter/config/app_text.dart';
 import 'package:readypos_flutter/controllers/collection_controller/collection.dart';
+import 'package:readypos_flutter/routes.dart';
 
 class CollectionsListView extends ConsumerStatefulWidget {
   const CollectionsListView({super.key});
@@ -61,11 +62,12 @@ class _CollectionsListViewState extends ConsumerState<CollectionsListView> {
                       final c = items[i];
                       return InkWell(
                         borderRadius: BorderRadius.circular(10.r),
-                        onTap: () {
-                          // navegar a masterpieces filtrado por colección
-                          // Navigator.pushNamed(context, Routes.masterpiecesListView,
-                          //   arguments: c.id);
-                        },
+                        // FIX BUG-002: navega al detalle de la colección
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          Routes.collectionDetail,
+                          arguments: c,
+                        ),
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -108,6 +110,16 @@ class _CollectionsListViewState extends ConsumerState<CollectionsListView> {
                                                   fontWeight: FontWeight.w600),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis),
+                                      // descripción si existe
+                                      if (c.description != null &&
+                                          c.description!.isNotEmpty) ...[
+                                        Gap(4.h),
+                                        Text(c.description!,
+                                            style: AppTextStyle.smallBody
+                                                .copyWith(color: Colors.grey),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis),
+                                      ],
                                     ],
                                   ),
                                 ),

@@ -43,6 +43,9 @@ import 'package:readypos_flutter/views/museum/event_detail_view.dart';
 import 'package:readypos_flutter/views/museum/news_list_view.dart';
 import 'package:readypos_flutter/views/museum/news_detail_view.dart';
 
+import 'package:readypos_flutter/views/museum/collection_detail_view.dart'; // ← nuevo
+import 'package:readypos_flutter/views/museum/artist_detail_view.dart'; // ← nuevo
+
 class Routes {
   Routes._();
   static const String splash = '/';
@@ -78,6 +81,9 @@ class Routes {
   static const String eventDetail = '/eventDetail';
   static const String newsListView = '/newsListView';
   static const String newsDetail = '/newsDetail';
+
+  static const String collectionDetail = '/collectionDetail'; // ← nuevo
+  static const String artistDetail = '/artistDetail'; // ← nuevo
 }
 
 Route generatedRoutes(RouteSettings settings) {
@@ -173,8 +179,19 @@ Route generatedRoutes(RouteSettings settings) {
     case Routes.collectionsListView:
       child = const CollectionsListView();
       break;
+
+    case Routes.collectionDetail: // ← nuevo
+      child = CollectionDetailView(
+        collection: settings.arguments as Collection,
+      );
+      break;
     case Routes.artistsListView:
       child = const ArtistsListView();
+      break;
+    case Routes.artistDetail: // ← nuevo
+      child = ArtistDetailView(
+        artist: settings.arguments as Brand,
+      );
       break;
     case Routes.masterpiecesListView:
       child = const MasterpiecesListView();

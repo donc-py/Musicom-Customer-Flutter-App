@@ -6,6 +6,7 @@ import 'package:gap/gap.dart';
 import 'package:readypos_flutter/config/app_color.dart';
 import 'package:readypos_flutter/config/app_text.dart';
 import 'package:readypos_flutter/controllers/brand_controller/brand.dart';
+import 'package:readypos_flutter/routes.dart';
 
 class ArtistsListView extends ConsumerStatefulWidget {
   const ArtistsListView({super.key});
@@ -59,9 +60,12 @@ class _ArtistsListViewState extends ConsumerState<ArtistsListView> {
                     itemBuilder: (_, i) {
                       final a = items[i];
                       return GestureDetector(
-                        onTap: () {
-                          // navegar a masterpieces filtrado por artista
-                        },
+                        // FIX: navega al detalle del artista con sus obras
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          Routes.artistDetail,
+                          arguments: a,
+                        ),
                         child: Column(
                           children: [
                             ClipOval(
