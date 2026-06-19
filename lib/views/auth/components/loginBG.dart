@@ -15,53 +15,60 @@ class LoginBG extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    // ✅ Si el teclado está abierto, ocultamos/encogemos el logo para
+    // dar más espacio real al formulario. Esto es lo que hacen apps
+    // modernas: el branding de arriba no es prioritario cuando el
+    // usuario está escribiendo.
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Gap(70.h),
-              SizedBox(
-                height: 50.h,
-                width: 250.w,
-                child: AdaptiveTheme.of(context).mode.isDark
-                    ? Assets.pngs.logoMusicom.image()
-                    : Assets.pngs.logoMusicom.image(),
-              ).animate(delay: 400.ms).slideY(
-                    begin: 6.5,
-                    end: 0.0,
-                    duration: const Duration(milliseconds: 1000),
-                  ),
-              Gap(28.h),
-              SizedBox(
-                height: 150.h,
-                width: 210.w,
-                child: SvgPicture.asset(Assets.svgs.loginBG),
-              ).animate().slideY(
-                    begin: 6,
-                    end: 0.0,
-                    duration: const Duration(milliseconds: 1000),
-                  ),
-            ],
-          ),
+        // Logo + SVG: solo se muestran si el teclado está cerrado.
+        // AnimatedSwitcher/AnimatedSize para que la transición no
+        // sea brusca.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          child: keyboardOpen
+              ? const SizedBox(width: double.infinity, height: 0)
+              : Column(
+                  children: [
+                    Gap(70.h),
+                    SizedBox(
+                      height: 50.h,
+                      width: 250.w,
+                      child: AdaptiveTheme.of(context).mode.isDark
+                          ? Assets.pngs.logoMusicom.image()
+                          : Assets.pngs.logoMusicom.image(),
+                    ).animate(delay: 400.ms).slideY(
+                          begin: 6.5,
+                          end: 0.0,
+                          duration: const Duration(milliseconds: 1000),
+                        ),
+                    Gap(28.h),
+                    SizedBox(
+                      height: 150.h,
+                      width: 210.w,
+                      child: SvgPicture.asset(Assets.svgs.loginBG),
+                    ).animate().slideY(
+                          begin: 6,
+                          end: 0.0,
+                          duration: const Duration(milliseconds: 1000),
+                        ),
+                  ],
+                ),
         ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0, // ✅ esto da ancho finito al child
+        // ✅ Expanded: el formulario recibe TODO el espacio restante
+        // de la pantalla, que ya viene correctamente reducido por el
+        // teclado gracias a resizeToAvoidBottomInset: true en el
+        // Scaffold padre.
+        Expanded(
           child: child
               .animate()
               .fadeIn(
                 begin: 0.4,
-                duration: const Duration(milliseconds: 1200),
-              )
-              .animate()
-              .slideY(
-                begin: 1.5,
-                end: 0.0,
-                duration: const Duration(milliseconds: 1200),
+                duration: const Duration(milliseconds: 600),
               ),
         ),
       ],
