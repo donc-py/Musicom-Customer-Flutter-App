@@ -183,7 +183,7 @@ class MuseumHubView extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Gap(68.h),
+                Gap(30.h),
                 const LogoSection(),
               ],
             ),

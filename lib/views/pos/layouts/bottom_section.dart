@@ -56,15 +56,7 @@ class BottomSection extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             InkWell(
-              onTap: () {
-                _chooseCustomerBottomSheet(context);
-                if (ref
-                        .read(customerControllerProvider.notifier)
-                        .customerList ==
-                    null) {
-                  ref.read(customerControllerProvider.notifier).getCustomers();
-                }
-              },
+              onTap: null,
               child: Container(
                 // height: context.isTabletLandsCape ? 60.h : 35.h,
                 padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
@@ -82,35 +74,20 @@ class BottomSection extends ConsumerWidget {
                             ),
                       Gap(12.w),
                       Expanded(
-                        child: selectedCustomer != null
-                            ? MediaQuery.sizeOf(context).shortestSide > 600
-                                ? Text(
-                                    selectedCustomer.name!,
-                                    style: AppTextStyle.normalBody.copyWith(
-                                      fontSize: 12.sp,
-                                    ),
-                                  )
-                                : Text(
-                                    selectedCustomer.name!,
-                                    style: AppTextStyle.normalBody.copyWith(
-                                      fontSize: context.isTabletLandsCape
-                                          ? 12.sp
-                                          : 15.sp,
-                                    ),
-                                  )
-                            : MediaQuery.sizeOf(context).shortestSide > 600
-                                ? Text(
-                                    S.of(context).chooseCustomer,
-                                    style: AppTextStyle.normalBody.copyWith(
-                                      fontSize: 12.sp,
-                                    ),
-                                  )
-                                : Text(
-                                    S.of(context).chooseCustomer,
-                                    style: AppTextStyle.normalBody.copyWith(
-                                      fontSize: 15.sp,
-                                    ),
-                                  ),
+                        child: Builder(builder: (context) {
+                          final authBox = Hive.box(AppConstants.authBox);
+                          final userData = authBox.get(AppConstants.userData);
+                          final userName = userData is Map
+                              ? (userData['name'] ??
+                                  userData['email'] ??
+                                  'Utente')
+                              : 'Utente';
+                          return Text(
+                            userName,
+                            style: AppTextStyle.normalBody
+                                .copyWith(fontSize: 15.sp),
+                          );
+                        }),
                       ),
                       Gap(12.w),
                       SvgPicture.asset(Assets.svgs.arrowDown2)

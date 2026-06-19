@@ -26,20 +26,10 @@ class LoginBG extends StatelessWidget {
               SizedBox(
                 height: 50.h,
                 width: 250.w,
-                // child: SvgPicture.asset(
-                //   AdaptiveTheme.of(context).mode.isDark
-                //       ? Assets.svgs.logowhite
-                //       : Assets.svgs.logoblack,
-                // ),
                 child: AdaptiveTheme.of(context).mode.isDark
                     ? Assets.pngs.logoMusicom.image()
                     : Assets.pngs.logoMusicom.image(),
-              )
-                  .animate(
-                    delay: 400.ms,
-                    // autoPlay: false,
-                  )
-                  .slideY(
+              ).animate(delay: 400.ms).slideY(
                     begin: 6.5,
                     end: 0.0,
                     duration: const Duration(milliseconds: 1000),
@@ -48,34 +38,21 @@ class LoginBG extends StatelessWidget {
               SizedBox(
                 height: 150.h,
                 width: 210.w,
-                child: SvgPicture.asset(
-                  Assets.svgs.loginBG,
-                ),
-              )
-                  .animate(
-                      // delay: 600.ms,
-                      // autoPlay: false,
-                      )
-                  // .fadeIn(
-                  //   begin: 0.5,
-                  //   duration: const Duration(milliseconds: 1200),
-                  // )
-                  .slideY(
+                child: SvgPicture.asset(Assets.svgs.loginBG),
+              ).animate().slideY(
                     begin: 6,
                     end: 0.0,
                     duration: const Duration(milliseconds: 1000),
-                  )
+                  ),
             ],
           ),
         ),
         Positioned(
           bottom: 0,
           left: 0,
+          right: 0, // ✅ esto da ancho finito al child
           child: child
-              .animate(
-                  // delay: 800.ms,
-                  // autoPlay: false,
-                  )
+              .animate()
               .fadeIn(
                 begin: 0.4,
                 duration: const Duration(milliseconds: 1200),
@@ -86,7 +63,7 @@ class LoginBG extends StatelessWidget {
                 end: 0.0,
                 duration: const Duration(milliseconds: 1200),
               ),
-        )
+        ),
       ],
     );
   }

@@ -538,9 +538,9 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                 : AppColor.whiteColor,
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Gap(68.h),
+                Gap(30.h),
                 const LogoSection(),
               ],
             ),
@@ -971,7 +971,7 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                     ),
                   ),
 
-                  Gap(32.h),
+                  Gap(16.h),
                 ],
               ),
             ),

@@ -22,8 +22,8 @@ class PaymentTypeSection extends ConsumerWidget {
         return S.of(context).cash;
       // case PaymentMethod.orangePay:
       //   return S.of(context).orangePay;
-      case PaymentMethod.draft:
-        return "Draft";
+      // case PaymentMethod.draft:
+      //   return "Draft";
       default:
         return '';
     }
@@ -115,7 +115,7 @@ class PaymentTypeSection extends ConsumerWidget {
                       mainAxisSpacing: 20.h,
                       mainAxisExtent: context.isTabletLandsCape ? 95.h : 55.0.h,
                     ),
-                    itemCount: PaymentMethod.values.length,
+                    itemCount: 1,
                     itemBuilder: (context, index) {
                       return CustomPaymentButton(
                         buttonText: getPaymentMethod(

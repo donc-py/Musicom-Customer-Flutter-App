@@ -12,13 +12,13 @@ import 'package:readypos_flutter/generated/l10n.dart';
 import 'package:readypos_flutter/routes.dart';
 import 'package:readypos_flutter/utils/context_less_navigation.dart';
 
-class POSAppBar extends StatelessWidget {
+class POSAppBar extends ConsumerWidget {
   const POSAppBar({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: AdaptiveTheme.of(context).mode.isDark
@@ -44,7 +44,9 @@ class POSAppBar extends StatelessWidget {
             children: [
               InkWell(
                 onTap: () {
-                  Navigator.pop(context);
+                  //Navigator.pop(context);
+                  ref.read(selectedIndexProvider.notifier).state = 0;
+                  ref.read(bottomTabControllerProvider).jumpToPage(0);
                 },
                 child: Container(
                   width: 40.w,

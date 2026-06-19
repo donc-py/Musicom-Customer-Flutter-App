@@ -20,19 +20,25 @@ class RegisterLayout extends ConsumerStatefulWidget {
 }
 
 class _RegisterLayoutState extends ConsumerState<RegisterLayout> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
+  final _nameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
 
-  // Simple check: all required fields filled
+  final _nameKey = GlobalKey();
+  final _emailKey = GlobalKey();
+  final _phoneKey = GlobalKey();
+  final _passwordKey = GlobalKey();
+  final _confirmKey = GlobalKey();
+
   bool get _isEnabled =>
       _nameController.text.isNotEmpty &&
       _emailController.text.isNotEmpty &&
@@ -48,9 +54,32 @@ class _RegisterLayoutState extends ConsumerState<RegisterLayout> {
     _phoneController.addListener(_rebuild);
     _passwordController.addListener(_rebuild);
     _confirmPasswordController.addListener(_rebuild);
+
+    _nameFocus.addListener(() => _onFocus(_nameFocus, _nameKey));
+    _emailFocus.addListener(() => _onFocus(_emailFocus, _emailKey));
+    _phoneFocus.addListener(() => _onFocus(_phoneFocus, _phoneKey));
+    _passwordFocus.addListener(() => _onFocus(_passwordFocus, _passwordKey));
+    _confirmFocus.addListener(() => _onFocus(_confirmFocus, _confirmKey));
   }
 
   void _rebuild() => setState(() {});
+
+  void _onFocus(FocusNode node, GlobalKey key) {
+    if (!node.hasFocus) return;
+    // Esperamos a que termine la animación de apertura del teclado
+    // antes de calcular la posición de scroll (evita que el cálculo
+    // se haga con el viewInsets todavía en 0).
+    Future.delayed(const Duration(milliseconds: 250), () {
+      final ctx = key.currentContext;
+      if (ctx == null || !mounted) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignment: 0.5, // centra el campo en el viewport visible
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -59,20 +88,23 @@ class _RegisterLayoutState extends ConsumerState<RegisterLayout> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _phoneFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
   }
 
   void _submit() {
     FocusScope.of(context).unfocus();
     if (!_isEnabled) return;
-
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Las contraseñas no coinciden')),
       );
       return;
     }
-
     ref
         .read(authControllerProvider.notifier)
         .register(
@@ -81,10 +113,8 @@ class _RegisterLayoutState extends ConsumerState<RegisterLayout> {
           phone: _phoneController.text.trim(),
           password: _passwordController.text,
         )
-        .then((isSuccess) {
-      if (isSuccess) {
-        context.nav.pushNamed(Routes.core);
-      }
+        .then((ok) {
+      if (ok) context.nav.pushNamed(Routes.core);
     });
   }
 
@@ -93,91 +123,91 @@ class _RegisterLayoutState extends ConsumerState<RegisterLayout> {
     final isLoading = ref.watch(authControllerProvider);
 
     return Scaffold(
+      // ✅ Flutter maneja el resize de forma nativa, sin Positioned manual
+      resizeToAvoidBottomInset: true,
       body: LoginBG(
-        child: Container(
-          width: MediaQuery.sizeOf(context).width,
-          padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 24.h),
-          decoration: BoxDecoration(
-            color: AdaptiveTheme.of(context).mode.isDark
-                ? Colors.black
-                : AppColor.whiteColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
+        // El form vuelve a estar en flujo normal (no Positioned),
+        // por eso Flutter SÍ puede recalcular su MediaQuery.viewInsets.
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          physics: const ClampingScrollPhysics(),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 24.h),
+            decoration: BoxDecoration(
+              color: AdaptiveTheme.of(context).mode.isDark
+                  ? Colors.black
+                  : AppColor.whiteColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AdaptiveTheme.of(context).mode.isDark
+                      ? Colors.white
+                      : AppColor.shadowColor,
+                  blurRadius: 5.0,
+                  spreadRadius: 0.5,
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AdaptiveTheme.of(context).mode.isDark
-                    ? Colors.white
-                    : AppColor.shadowColor,
-                blurRadius: 5.0,
-                spreadRadius: 0.5,
-                offset: const Offset(0.0, 0.0),
-              )
-            ],
-          ),
-          child: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Registrati',
-                    style: AppTextStyle.extraLargeBody,
-                  ),
+                  Text('Registrati', style: AppTextStyle.extraLargeBody),
                   Gap(24.h),
-
-                  // Name
-                  _fieldLabel(text: 'Nome'),
+                  _label('Nome'),
                   Gap(8.h),
                   CustomTextField(
+                    key: _nameKey,
                     controller: _nameController,
                     hint: 'Inserisci il tuo nome',
+                    focusNode: _nameFocus,
                   ),
                   Gap(16.h),
-
-                  // Email
-                  _fieldLabel(text: 'Email'),
+                  _label('Email'),
                   Gap(8.h),
                   CustomTextField(
+                    key: _emailKey,
                     controller: _emailController,
                     hint: 'Inserisci la tua email',
+                    focusNode: _emailFocus,
                   ),
                   Gap(16.h),
-
-                  // Phone
-                  _fieldLabel(text: 'Telefono'),
+                  _label('Telefono'),
                   Gap(8.h),
                   CustomTextField(
+                    key: _phoneKey,
                     controller: _phoneController,
                     hint: '+39 000 000 0000',
+                    focusNode: _phoneFocus,
                   ),
                   Gap(16.h),
-
-                  // Password
-                  _fieldLabel(text: 'Password'),
+                  _label('Password'),
                   Gap(8.h),
                   CustomTextField(
+                    key: _passwordKey,
                     controller: _passwordController,
                     isPassword: true,
-                    obscureText: _obscurePassword,
+                    obscureText: true,
                     hint: 'Crea una password',
+                    focusNode: _passwordFocus,
                   ),
                   Gap(16.h),
-
-                  // Confirm password
-                  _fieldLabel(text: 'Conferma Password'),
+                  _label('Conferma Password'),
                   Gap(8.h),
                   CustomTextField(
+                    key: _confirmKey,
                     controller: _confirmPasswordController,
                     isPassword: true,
-                    obscureText: _obscureConfirm,
+                    obscureText: true,
                     hint: 'Ripeti la password',
+                    focusNode: _confirmFocus,
                   ),
                   Gap(32.h),
-
-                  // Submit button
                   isLoading
                       ? const Align(
                           alignment: Alignment.center,
@@ -191,17 +221,12 @@ class _RegisterLayoutState extends ConsumerState<RegisterLayout> {
                             onPressed: _submit,
                           ),
                         ),
-
                   Gap(16.h),
-
-                  // Back to login
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Hai già un account? ',
-                        style: AppTextStyle.normalBody,
-                      ),
+                      Text('Hai già un account?',
+                          style: AppTextStyle.normalBody),
                       TextButton(
                         onPressed: () => context.nav.pop(),
                         child: Text(
@@ -225,7 +250,7 @@ class _RegisterLayoutState extends ConsumerState<RegisterLayout> {
     );
   }
 
-  Row _fieldLabel({required String text}) {
+  Widget _label(String text) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

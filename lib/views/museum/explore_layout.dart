@@ -367,8 +367,8 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                 : AppColor.whiteColor,
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Gap(68.h), const LogoSection()],
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [Gap(30.h), const LogoSection()],
             ),
           ),
           Container(

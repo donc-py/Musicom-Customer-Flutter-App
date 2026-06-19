@@ -17,6 +17,8 @@ class AppDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final userData = Hive.box(AppConstants.authBox).get(AppConstants.userData);
+    debugPrint('userData keys: ${userData.toString()}');
     return Drawer(
       width: MediaQuery.sizeOf(context).width * 0.78,
       child: SafeArea(
@@ -147,9 +149,23 @@ class AppDrawer extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Amanda',
-                            style: AppTextStyle.normalBody
-                                .copyWith(fontWeight: FontWeight.w600)),
+                        ValueListenableBuilder(
+                          valueListenable:
+                              Hive.box(AppConstants.authBox).listenable(),
+                          builder: (context, box, _) {
+                            final userData = box.get(AppConstants.userData);
+                            final userName = userData is Map
+                                ? (userData['name'] ??
+                                    userData['email'] ??
+                                    'Utente')
+                                : 'Utente';
+                            return Text(
+                              userName,
+                              style: AppTextStyle.normalBody
+                                  .copyWith(fontWeight: FontWeight.w600),
+                            );
+                          },
+                        ),
                         GestureDetector(
                           onTap: () {
                             Navigator.pop(context);
@@ -174,7 +190,7 @@ class AppDrawer extends ConsumerWidget {
                       Box authBox = Hive.box(AppConstants.authBox);
                       authBox.clear().then(
                             (value) => context.nav.pushNamedAndRemoveUntil(
-                                Routes.login, (route) => false),
+                                Routes.welcome, (route) => false),
                           );
                     },
                   ),

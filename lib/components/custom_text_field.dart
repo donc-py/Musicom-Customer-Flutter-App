@@ -16,6 +16,8 @@ class CustomTextField extends StatefulWidget {
     this.obscureText = false,
     this.readOnly = false,
     this.onChanged,
+    this.onTap, // ✅ nuevo
+    this.focusNode, // ✅ nuevo
     this.validator,
     this.minLine = 1,
     this.textInputAction = TextInputAction.next,
@@ -31,6 +33,8 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap; // ✅ nuevo
+  final FocusNode? focusNode; // ✅ nuevo
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -61,6 +65,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
         TextFormField(
           controller: widget.controller,
           onChanged: widget.onChanged,
+          onTap: widget.onTap, // ✅ nuevo
+          focusNode: widget.focusNode, // ✅ nuevo
           obscureText: widget.obscureText,
           readOnly: widget.readOnly,
           maxLines: widget.minLine != 1 ? 3 : 1,
