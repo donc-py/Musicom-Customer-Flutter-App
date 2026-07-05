@@ -55,15 +55,15 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
           onPageChanged: (index) {
             ref.watch(selectedIndexProvider.notifier).state = index;
           },
-          children: const [
-            DashBoardViewScreen(), // 0 – Dashboard
-            ExploreView(), // 1 – Esplora il MUCICOM
-            NewsListView(), // 2 – Novità / News
-            POSView(), // 3 – Cart / POS
+          children: [
+            const DashBoardViewScreen(), // 0 – Dashboard
+            const ExploreView(), // 1 – Esplora il MUCICOM
+            const NewsListView(), // 2 – Novità / News
+            const POSView(), // 3 – Cart / POS
           ],
         ),
 
-        // ── Bottom Navigation Bar ────────────────────────────────────────
+        // ── Bottom Navigation Bar (scanner como item normal) ─────────────
         bottomNavigationBar: Container(
           height: context.isTabletLandsCape ? 110.h : 84.h,
           decoration: BoxDecoration(
@@ -84,48 +84,36 @@ class _CoreLayoutState extends ConsumerState<CoreLayout> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: List<Widget>.generate(5, (index) {
-              if (index == 2) return SizedBox(width: 30.w); // spacer FAB
-              final int itemIndex = index < 2 ? index : index - 1;
-              return _BottomNavItem(
-                index: itemIndex,
-                isActive: ref.watch(selectedIndexProvider) == itemIndex,
-                onTap: () => pageController.jumpToPage(itemIndex),
-              );
-            }),
-          ),
-        ),
-
-        // ── FAB → Scanner de productos ───────────────────────────────────
-        floatingActionButton: keyboardIsOpened
-            ? null
-            : SizedBox(
-                height: MediaQuery.sizeOf(context).shortestSide > 600
-                    ? context.isTabletLandsCape
-                        ? 90.h
-                        : 70.h
-                    : 55.h,
-                width: MediaQuery.sizeOf(context).shortestSide > 600
-                    ? context.isTabletLandsCape
-                        ? 90.h
-                        : 70.h
-                    : 55.w,
-                child: FloatingActionButton(
-                  // FIX: abre el scanner en lugar de MuseumHubView
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ScannerScreen(),
-                    ),
-                  ),
-                  elevation: 0,
-                  backgroundColor: const Color.fromARGB(255, 195, 228, 192),
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0.r),
-                    child: Assets.pngs.icon.image(),
-                  ),
+            children: [
+              _BottomNavItem(
+                index: 0,
+                isActive: ref.watch(selectedIndexProvider) == 0,
+                onTap: () => pageController.jumpToPage(0),
+              ),
+              _BottomNavItem(
+                index: 1,
+                isActive: ref.watch(selectedIndexProvider) == 1,
+                onTap: () => pageController.jumpToPage(1),
+              ),
+              // ── Scanner como item normal de la barra ──────────────────
+              _ScannerNavItem(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ScannerScreen()),
                 ),
               ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+              _BottomNavItem(
+                index: 2,
+                isActive: ref.watch(selectedIndexProvider) == 2,
+                onTap: () => pageController.jumpToPage(2),
+              ),
+              _BottomNavItem(
+                index: 3,
+                isActive: ref.watch(selectedIndexProvider) == 3,
+                onTap: () => pageController.jumpToPage(3),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -165,7 +153,7 @@ class _BottomNavItem extends StatelessWidget {
       onTap: onTap,
       child: SizedBox(
         height: context.isTabletLandsCape ? 75.h : 68.h,
-        width: 90.w,
+        width: 75.w,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -179,6 +167,35 @@ class _BottomNavItem extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: color,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Scanner Nav Item (icono del logo, sin estado activo) ──────────────────
+
+class _ScannerNavItem extends StatelessWidget {
+  const _ScannerNavItem({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        height: context.isTabletLandsCape ? 75.h : 68.h,
+        width: 75.w,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: context.isTabletLandsCape ? 34.h : 28.h,
+              width: context.isTabletLandsCape ? 34.h : 28.h,
+              child: Assets.pngs.icon.image(),
             ),
           ],
         ),

@@ -1543,6 +1543,16 @@ class S {
       args: [],
     );
   }
+
+  /// `Paypal`
+  String get Paypal {
+    return Intl.message(
+      'Paypal',
+      name: 'Paypal',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

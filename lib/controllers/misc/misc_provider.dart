@@ -46,3 +46,9 @@ final isEditPriceProvider =
 
 
 final draftIdProvider = StateProvider<int?>((ref) => null);
+
+
+enum ExploreSection { biglietti, orari, posizione }
+
+final pendingExploreSectionProvider =
+    StateProvider<ExploreSection?>((ref) => null);

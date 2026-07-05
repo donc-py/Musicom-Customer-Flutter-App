@@ -1,5 +1,4 @@
 enum PaymentMethod {
   cash,
-  // orangePay,
-  draft,
+  paypal,
 }

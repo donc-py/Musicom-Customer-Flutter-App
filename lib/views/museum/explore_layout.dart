@@ -15,6 +15,8 @@ import 'package:readypos_flutter/models/cart_models/hive_cart_model.dart';
 import 'package:readypos_flutter/models/product_model.dart';
 import 'package:readypos_flutter/views/dashboard/components/logo_section.dart';
 import 'package:readypos_flutter/views/core/components/app_drawer.dart';
+import 'package:readypos_flutter/controllers/misc/misc_provider.dart';
+
 
 class ExploreLayout extends ConsumerStatefulWidget {
   const ExploreLayout({super.key});
@@ -40,9 +42,50 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
     },
   ];
 
+  // FIX: keys para poder hacer scroll a cada sección
+  final _bigliettiKey = GlobalKey();
+  final _orariKey = GlobalKey();
+  final _posizioneKey = GlobalKey();
+
+   @override
+  void initState() {
+    super.initState();
+    // FIX: si venimos del Dashboard con una sección pendiente, saltar ahí
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPendingSection();
+    });
+  }
+
+  void _checkPendingSection() {
+    final pending = ref.read(pendingExploreSectionProvider);
+    if (pending != null) {
+      _scrollToSection(pending);
+      // limpiar para que no se repita si vuelves a esta pantalla sin pedirlo
+      ref.read(pendingExploreSectionProvider.notifier).state = null;
+    }
+  }
+
+  void _scrollToSection(ExploreSection section) {
+    final key = switch (section) {
+      ExploreSection.biglietti => _bigliettiKey,
+      ExploreSection.orari => _orariKey,
+      ExploreSection.posizione => _posizioneKey,
+    };
+    final ctx = key.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.05,
+      );
+    }
+  }
+
   // ─── helpers ─────────────────────────────────────────────────────────────
 
-  Widget _sectionTitle(String title) => Padding(
+  Widget _sectionTitle(String title, {Key? key}) => Padding(
+        key: key,
         padding: EdgeInsets.symmetric(vertical: 12.h),
         child: Text(title,
             style: AppTextStyle.title
@@ -52,52 +95,39 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
   // ─── quick access ────────────────────────────────────────────────────────
 
   Widget _quickAccess() {
-    final items = [
-      {
-        'icon': Icons.airplane_ticket_outlined,
-        'label': 'Biglietti',
-        'sub': 'Prezzi, sconti'
-      },
-      {'icon': Icons.access_time_outlined, 'label': 'Orari', 'sub': 'Apertura'},
-      {
-        'icon': Icons.location_on_outlined,
-        'label': 'Posizione',
-        'sub': 'Localizzazione'
-      },
-    ];
-    return Row(
-      children: items.map((item) {
-        final idx = items.indexOf(item);
-        return Expanded(
-          child: GestureDetector(
-            onTap: () {},
-            child: Container(
-              margin: EdgeInsets.only(right: idx < 2 ? 8.w : 0),
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 14.h),
-              decoration: BoxDecoration(
-                color: AppColor.primaryColor.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(item['icon'] as IconData,
-                      size: 22.r, color: AppColor.primaryColor),
-                  Gap(8.h),
-                  Text(item['label'] as String,
-                      style: AppTextStyle.normalBody
-                          .copyWith(fontWeight: FontWeight.w600)),
-                  Text(item['sub'] as String,
-                      style:
-                          AppTextStyle.smallBody.copyWith(color: Colors.grey)),
-                ],
-              ),
+  final items = [
+    {'icon': Icons.airplane_ticket_outlined, 'label': 'Biglietti', 'sub': 'Prezzi, sconti', 'section': ExploreSection.biglietti},
+    {'icon': Icons.access_time_outlined, 'label': 'Orari', 'sub': 'Apertura', 'section': ExploreSection.orari},
+    {'icon': Icons.location_on_outlined, 'label': 'Posizione', 'sub': 'Localizzazione', 'section': ExploreSection.posizione},
+  ];
+  return Row(
+    children: items.map((item) {
+      final idx = items.indexOf(item);
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => _scrollToSection(item['section'] as ExploreSection),
+          child: Container(
+            margin: EdgeInsets.only(right: idx < 2 ? 8.w : 0),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: AppColor.primaryColor.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(item['icon'] as IconData, size: 22.r, color: AppColor.primaryColor),
+                Gap(8.h),
+                Text(item['label'] as String, style: AppTextStyle.normalBody.copyWith(fontWeight: FontWeight.w600)),
+                Text(item['sub'] as String, style: AppTextStyle.smallBody.copyWith(color: Colors.grey)),
+              ],
             ),
           ),
-        );
-      }).toList(),
-    );
-  }
+        ),
+      );
+    }).toList(),
+  );
+}
 
   // ─── biglietti ───────────────────────────────────────────────────────────
 
@@ -441,7 +471,7 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                   Gap(24.h),
 
                   // ── Biglietti ────────────────────────────────────────
-                  _sectionTitle('Biglietti'),
+                  _sectionTitle('Biglietti', key: _bigliettiKey),
                   Consumer(builder: (context, ref, _) {
                     final isLoading = ref.watch(productControllerProvider);
                     final products =
@@ -471,10 +501,10 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                   }),
 
                   Gap(8.h),
-                  _sectionTitle('Orari'),
+                  _sectionTitle('Orari', key: _orariKey),
                   _buildOrariSection(),
                   Gap(8.h),
-                  _sectionTitle('Posizione'),
+                  _sectionTitle('Posizione', key: _posizioneKey),
                   _buildPosizioneSection(),
                   Gap(32.h),
                 ],

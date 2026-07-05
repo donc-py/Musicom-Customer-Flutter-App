@@ -38,6 +38,14 @@ class DashBoardLayout extends ConsumerStatefulWidget {
 }
 
 class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
+
+  void _goToExploreSection(ExploreSection section) {
+    // 1. deja la sección marcada como pendiente
+    ref.read(pendingExploreSectionProvider.notifier).state = section;
+    // 2. cambia de pestaña a Explore (índice 1 en el PageView del CoreLayout)
+    ref.read(selectedIndexProvider.notifier).state = 1;
+    ref.read(bottomTabControllerProvider).jumpToPage(1);
+  }
   @override
   void initState() {
     super.initState();
@@ -616,15 +624,44 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // FIX BUG-008: los 3 van a ExploreView (misma pantalla del menú lateral)
+                          // Expanded(
+                          //     child: _buildQuickAccessCard(
+                          //   'Biglietti',
+                          //   'Prezzi, sconti',
+                          //   Icons.airplane_ticket,
+                          //   () => Navigator.push(
+                          //       context,
+                          //       MaterialPageRoute(
+                          //           builder: (_) => const ExploreView())),
+                          // )),
+                          // Gap(12.w),
+                          // Expanded(
+                          //     child: _buildQuickAccessCard(
+                          //   'Orari',
+                          //   'Apertura',
+                          //   Icons.access_time,
+                          //   () => Navigator.push(
+                          //       context,
+                          //       MaterialPageRoute(
+                          //           builder: (_) => const ExploreView())),
+                          // )),
+                          // Gap(12.w),
+                          // Expanded(
+                          //     child: _buildQuickAccessCard(
+                          //   'Posizione',
+                          //   'Localizzazione',
+                          //   Icons.location_on,
+                          //   () => Navigator.push(
+                          //       context,
+                          //       MaterialPageRoute(
+                          //           builder: (_) => const ExploreView())),
+                          // )),
                           Expanded(
                               child: _buildQuickAccessCard(
                             'Biglietti',
                             'Prezzi, sconti',
                             Icons.airplane_ticket,
-                            () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const ExploreView())),
+                            () => _goToExploreSection(ExploreSection.biglietti),
                           )),
                           Gap(12.w),
                           Expanded(
@@ -632,10 +669,7 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                             'Orari',
                             'Apertura',
                             Icons.access_time,
-                            () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const ExploreView())),
+                            () => _goToExploreSection(ExploreSection.orari),
                           )),
                           Gap(12.w),
                           Expanded(
@@ -643,10 +677,7 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                             'Posizione',
                             'Localizzazione',
                             Icons.location_on,
-                            () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const ExploreView())),
+                            () => _goToExploreSection(ExploreSection.posizione),
                           )),
                         ],
                       ),
