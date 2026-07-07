@@ -103,7 +103,7 @@ class ProductSection extends StatelessWidget {
                                       child: ProductCart(
                                         isBorderActive: true,
                                         productModel: products[index],
-                                        isPriceEditAble: true,
+                                        isPriceEditAble: false,
                                       ),
                                     ),
                                     products.length - 1 == index

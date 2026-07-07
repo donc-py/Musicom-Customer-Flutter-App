@@ -58,7 +58,8 @@ class POSStoreController extends StateNotifier<bool> {
       if (response.statusCode == 200) {
         final pdfUrl = response.data['data']['invoice_pdf_url'];
         final qrUrl = response.data['data']['qr_code_path'];
-        return POSResponse(invoicePDFUrl: pdfUrl, qrUrl: qrUrl);
+        // final paymentId = response.data['data']['payment_id'];
+        return POSResponse(invoicePDFUrl: pdfUrl, qrUrl: qrUrl, orderId: response.data['data']['order_id']);
       }
       return null;
     } catch (e) {

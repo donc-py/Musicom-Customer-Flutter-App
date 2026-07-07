@@ -12,38 +12,63 @@ abstract class POSRepository {
   Future<Response> getDrafts();
   Future<Response> paymentSuccess({required int id});
   Future<Response> deleteDraft({required int id});
+  Future<Response> createPaypalOrder({required int orderId});       // 👈 orderId
+  Future<Response> capturePaypalPayment({
+    required String token,
+    required int orderId,                                           // 👈 orderId
+  });
 }
 
 class POSService implements POSRepository {
   final Ref ref;
   const POSService(this.ref);
+
+  @override
+  Future<Response> createPaypalOrder({required int orderId}) {     // 👈 orderId
+    return ref.read(apiClientProvider).post(
+      AppConstants.paypalCreateOrder,
+      data: {'order_id': orderId},                                  // 👈 orderId
+    );
+  }
+
+  @override
+  Future<Response> capturePaypalPayment({
+    required String token,
+    required int orderId,                                           // 👈 orderId
+  }) {
+    return ref.read(apiClientProvider).post(
+      AppConstants.paypalCapture,
+      data: {
+        'token': token,
+        'order_id': orderId,
+      },
+    );
+  }
+
   @override
   Future<Response> store({required Map<String, dynamic> data}) {
-    final response = ref.read(apiClientProvider).post(
-          AppConstants.posStore,
-          data: data,
-        );
-
-    return response;
+    return ref.read(apiClientProvider).post(
+      AppConstants.posStore,
+      data: data,
+    );
   }
 
   @override
   Future<Response> getDrafts() {
-    final response = ref.read(apiClientProvider).get(AppConstants.drafts);
-    return response;
+    return ref.read(apiClientProvider).get(AppConstants.drafts);
   }
 
   @override
   Future<Response> paymentSuccess({required int id}) {
-    final response =
-        ref.read(apiClientProvider).get("${AppConstants.paymentSuccess}/$id");
-    return response;
+    return ref
+        .read(apiClientProvider)
+        .get("${AppConstants.paymentSuccess}/$id");
   }
 
   @override
   Future<Response> deleteDraft({required int id}) {
-    final response =
-        ref.read(apiClientProvider).get("${AppConstants.deleteDraft}/$id");
-    return response;
+    return ref
+        .read(apiClientProvider)
+        .get("${AppConstants.deleteDraft}/$id");
   }
 }

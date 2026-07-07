@@ -1,6 +1,9 @@
 class AppConstants {
   // API Constants
   // static const String baseUrl = 'https://www.sen.point-cash.org';
+  //paypal
+  static const String paypalCreateOrder = '$baseUrl/api/paypal/create-order';
+  static const String paypalCapture     = '$baseUrl/api/paypal/capture';
   static const String baseUrl = 'https://www.mucicom.it';
   static const String loginUrl = '$baseUrl/api/login';
   static const String registerUrl = '$baseUrl/api/registration';

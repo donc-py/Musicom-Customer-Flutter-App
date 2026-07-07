@@ -25,6 +25,9 @@ import 'package:readypos_flutter/routes.dart';
 import 'package:readypos_flutter/utils/context_less_navigation.dart';
 import 'package:readypos_flutter/utils/global_function.dart';
 import 'package:readypos_flutter/views/pos/components/customer_shimmerEffect.dart';
+import 'package:readypos_flutter/views/pos/paypal_webview_screen.dart';
+import 'package:readypos_flutter/controllers/pos_controller.dart/enums.dart';
+import 'package:readypos_flutter/services/pos_service_provider.dart';
 
 class BottomSection extends ConsumerWidget {
   const BottomSection({
@@ -195,6 +198,70 @@ class BottomSection extends ConsumerWidget {
     );
   }
 
+  // Future<void> posStore(
+  //     {required BuildContext context, required WidgetRef ref}) async {
+  //   final Box<HiveCartModel> cartBox =
+  //       Hive.box<HiveCartModel>(AppConstants.cartBox);
+  //   final subTotal = ref.read(cartController).subTotalAmount.toStringAsFixed(2);
+  //   final cuponId = ref.read(cuponControllerProvider.notifier).cuponId;
+  //   final customerId = ref.read(selectedCustomerProvider)?.id;
+
+  //   final List<int> productIds = [];
+  //   final List<int> productQuantities = [];
+  //   final List<double> pricingList = [];
+  //   for (var item in cartBox.values.toList()) {
+  //     productIds.add(item.id);
+  //     productQuantities.add(item.productsQTY);
+  //     pricingList.add(item.subTotal);
+  //   }
+
+  //   POSResponse? response =
+  //       await ref.read(posStoreControllerProvider.notifier).store(
+  //     data: {
+  //       'sale_id': ref.read(draftIdProvider),
+  //       'customer_id': customerId,
+  //       'product_ids': productIds,
+  //       'qty': productQuantities,
+  //       'coupon_id': cuponId,
+  //       'paid_amount': subTotal,
+  //       'price': pricingList,
+  //       'payment_status': 1,
+  //       'type': "Sales", // change to draft
+  //       "payment_method": ref.read(selectedPaymentMethodProvider).index == 1
+  //           ? "OrangeMoney"
+  //           : null,
+  //     },
+  //   );
+
+  //   if (response != null) {
+  //     // clear hive cart, cupon, customer
+  //     cartBox.clear();
+  //     ref.read(cuponControllerProvider.notifier).clearCupon();
+  //     ref.read(selectedCustomerProvider.notifier).state = null;
+  //     ref.read(cartController.notifier).clearFiles();
+
+  //     // if qr code comes then should be open qr code then show pdf dialog
+  //     if (ref.read(selectedPaymentMethodProvider).index == 1) {
+  //       context.nav.pop();
+  //       GlobalFunction.showCustomSnackbar(
+  //           message: "Order successfully Draft", isSuccess: true);
+  //     } else {
+  //       context.nav.pop();
+  //       GlobalFunction.showCustomSnackbar(
+  //           message: "Order successfully Placed", isSuccess: true);
+  //       ref.read(selectedIndexProvider.notifier).state = 0;
+  //       ref.read(bottomTabControllerProvider.notifier).state.jumpToPage(0);
+  //       context.nav.pushNamed(
+  //         Routes.pdfView,
+  //         arguments: response.invoicePDFUrl,
+  //       );
+  //     }
+  //   } else {
+  //     GlobalFunction.showCustomSnackbar(
+  //         message: "Something went wrong", isSuccess: false);
+  //   }
+  // }
+
   Future<void> posStore(
       {required BuildContext context, required WidgetRef ref}) async {
     final Box<HiveCartModel> cartBox =
@@ -202,6 +269,7 @@ class BottomSection extends ConsumerWidget {
     final subTotal = ref.read(cartController).subTotalAmount.toStringAsFixed(2);
     final cuponId = ref.read(cuponControllerProvider.notifier).cuponId;
     final customerId = ref.read(selectedCustomerProvider)?.id;
+    final paymentMethod = ref.read(selectedPaymentMethodProvider); // 👈 leer método
 
     final List<int> productIds = [];
     final List<int> productQuantities = [];
@@ -212,50 +280,126 @@ class BottomSection extends ConsumerWidget {
       pricingList.add(item.subTotal);
     }
 
-    POSResponse? response =
-        await ref.read(posStoreControllerProvider.notifier).store(
-      data: {
-        'sale_id': ref.read(draftIdProvider),
-        'customer_id': customerId,
-        'product_ids': productIds,
-        'qty': productQuantities,
-        'coupon_id': cuponId,
-        'paid_amount': subTotal,
-        'price': pricingList,
-        'payment_status': 1,
-        'type': "Sales", // change to draft
-        "payment_method": ref.read(selectedPaymentMethodProvider).index == 1
-            ? "OrangeMoney"
-            : null,
-      },
-    );
+    // ── Datos base de la orden (igual que antes) ──────────────────────────
+    final orderData = {
+      'sale_id': ref.read(draftIdProvider),
+      'customer_id': customerId,
+      'product_ids': productIds,
+      'qty': productQuantities,
+      'coupon_id': cuponId,
+      'paid_amount': subTotal,
+      'price': pricingList,
+      'payment_status': 1,
+      'type': "Sales",
+      "payment_method": paymentMethod == PaymentMethod.paypal
+          ? "paypal"
+          : paymentMethod.index == 1
+              ? "OrangeMoney"
+              : null,
+    };
 
-    if (response != null) {
-      // clear hive cart, cupon, customer
-      cartBox.clear();
-      ref.read(cuponControllerProvider.notifier).clearCupon();
-      ref.read(selectedCustomerProvider.notifier).state = null;
-      ref.read(cartController.notifier).clearFiles();
+    POSResponse? response = await ref
+        .read(posStoreControllerProvider.notifier)
+        .store(data: orderData);
 
-      // if qr code comes then should be open qr code then show pdf dialog
-      if (ref.read(selectedPaymentMethodProvider).index == 1) {
-        context.nav.pop();
+    if (response == null) {
+      GlobalFunction.showCustomSnackbar(
+          message: "Something went wrong", isSuccess: false);
+      return;
+    }
+
+    // ── Flujo PayPal ──────────────────────────────────────────────────────
+    if (paymentMethod == PaymentMethod.paypal) {
+      // Necesitamos el payment_id que ahora devuelve el backend
+      final orderId = response.orderId;
+
+      if (orderId == null) {
         GlobalFunction.showCustomSnackbar(
-            message: "Order successfully Draft", isSuccess: true);
-      } else {
-        context.nav.pop();
+            message: "PayPal: no se recibió payment_id", isSuccess: false);
+        return;
+      }
+
+      // 1. Crear orden en PayPal via Laravel
+      final paypalResponse = await ref
+          .read(posServiceProvider)
+          .createPaypalOrder(orderId: orderId);
+
+      if (paypalResponse.statusCode != 200) {
         GlobalFunction.showCustomSnackbar(
-            message: "Order successfully Placed", isSuccess: true);
+            message: "Error al conectar con PayPal", isSuccess: false);
+        return;
+      }
+
+      final approvalUrl =
+          paypalResponse.data['data']['approval_url'] as String?;
+      
+      final orderId2 = paypalResponse.data['data']['order_id'] as int;
+
+      if (approvalUrl == null) {
+        GlobalFunction.showCustomSnackbar(
+            message: "PayPal no devolvió URL de aprobación", isSuccess: false);
+        return;
+      }
+
+      // 2. Cerrar el AlertDialog de confirmación
+      context.nav.pop();
+
+      // 3. Abrir WebView in-app de PayPal
+      final success = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PaypalWebViewScreen(
+            approvalUrl: approvalUrl,
+            orderId: orderId2,
+          ),
+        ),
+      );
+
+      if (success == true) {
+        // 4a. Pago exitoso — limpiar y navegar igual que Cash
+        cartBox.clear();
+        ref.read(cuponControllerProvider.notifier).clearCupon();
+        ref.read(selectedCustomerProvider.notifier).state = null;
+        ref.read(cartController.notifier).clearFiles();
+
+        GlobalFunction.showCustomSnackbar(
+            message: "Pago con PayPal completado", isSuccess: true);
         ref.read(selectedIndexProvider.notifier).state = 0;
         ref.read(bottomTabControllerProvider.notifier).state.jumpToPage(0);
         context.nav.pushNamed(
           Routes.pdfView,
           arguments: response.invoicePDFUrl,
         );
+      } else {
+        // 4b. Usuario canceló o falló — la orden ya existe en BD,
+        // podrías marcarla como cancelada o simplemente avisar
+        GlobalFunction.showCustomSnackbar(
+            message: "Pago con PayPal cancelado", isSuccess: false);
       }
-    } else {
+
+      return; // 👈 importante: no continuar al flujo Cash
+    }
+
+    // ── Flujo Cash / OrangeMoney (exactamente igual que antes) ───────────
+    cartBox.clear();
+    ref.read(cuponControllerProvider.notifier).clearCupon();
+    ref.read(selectedCustomerProvider.notifier).state = null;
+    ref.read(cartController.notifier).clearFiles();
+
+    if (ref.read(selectedPaymentMethodProvider).index == 1) {
+      context.nav.pop();
       GlobalFunction.showCustomSnackbar(
-          message: "Something went wrong", isSuccess: false);
+          message: "Order successfully Draft", isSuccess: true);
+    } else {
+      context.nav.pop();
+      GlobalFunction.showCustomSnackbar(
+          message: "Order successfully Placed", isSuccess: true);
+      ref.read(selectedIndexProvider.notifier).state = 0;
+      ref.read(bottomTabControllerProvider.notifier).state.jumpToPage(0);
+      context.nav.pushNamed(
+        Routes.pdfView,
+        arguments: response.invoicePDFUrl,
+      );
     }
   }
 
