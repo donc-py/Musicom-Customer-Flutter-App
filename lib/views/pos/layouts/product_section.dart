@@ -11,6 +11,7 @@ import 'package:readypos_flutter/generated/l10n.dart';
 import 'package:readypos_flutter/models/cart_models/hive_cart_model.dart';
 import 'package:readypos_flutter/models/pos_product_model.dart';
 import 'package:readypos_flutter/views/pos/components/product_cart.dart';
+import 'package:readypos_flutter/gen/assets.gen.dart';
 import 'package:rive/rive.dart';
 
 class ProductSection extends StatelessWidget {
@@ -56,7 +57,7 @@ class ProductSection extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      S.of(context).products,
+                      'Prodotti',
                       style: AppTextStyle.largeBody,
                     ),
                     Gap(12.w),
@@ -81,9 +82,7 @@ class ProductSection extends StatelessWidget {
                   child: products.isEmpty
                       ? Padding(
                           padding: EdgeInsets.all(30.h),
-                          child: const RiveAnimation.asset(
-                            "assets/animations/empty.riv",
-                          ),
+                          child: Assets.pngs.logoMusicom.image(height: 50.h),
                         )
                       : Scrollbar(
                           controller: scrollController,

@@ -422,12 +422,10 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
   }
 
   // ─── products ─────────────────────────────────────────────────────────────
-
   Widget _buildProductCard(Product product) {
     final box = Hive.box<HiveCartModel>(AppConstants.cartBox);
-    final inCart = box.values.any((e) => e.id == product.id);
+    final price = product.price ?? 0.0;
 
-    // FIX BUG-014: la card entera abre el popup de detalle
     return InkWell(
       onTap: () => ProductDetailSheet.show(context, product: product),
       borderRadius: BorderRadius.circular(8.r),
@@ -446,7 +444,8 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.horizontal(left: Radius.circular(8.r)),
+              borderRadius:
+                  BorderRadius.horizontal(left: Radius.circular(8.r)),
               child: _networkImage(product.thumbnail, w: 120.w, h: 120.h),
             ),
             Expanded(
@@ -474,47 +473,49 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          // FIX BUG-013: formato correcto €XX.XX
-                          '${(product.price ?? 0.0).toStringAsFixed(2)} €',
+                          '${price.toStringAsFixed(2)} €',
                           style: AppTextStyle.normalBody.copyWith(
-                              fontWeight: FontWeight.w600, color: Colors.blue),
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue),
                         ),
-                        // FIX BUG-010: ValueListenableBuilder eliminado del onPressed.
-                        // Se usa ValueListenableBuilder correctamente para reconstruir el botón.
                         ValueListenableBuilder<Box<HiveCartModel>>(
-                          valueListenable:
-                              Hive.box<HiveCartModel>(AppConstants.cartBox)
-                                  .listenable(),
+                          valueListenable: box.listenable(),
                           builder: (context, cartBox, _) {
-                            final alreadyInCart =
-                                cartBox.values.any((e) => e.id == product.id);
+                            final cartKey = cartBox.keys.firstWhere(
+                              (k) => cartBox.get(k)?.id == product.id,
+                              orElse: () => null,
+                            );
+                            final inCart = cartKey != null;
+
                             return SizedBox(
                               height: 32.h,
                               child: ElevatedButton(
-                                onPressed: alreadyInCart
-                                    ? null
-                                    : () async {
-                                        final cartModel = HiveCartModel(
-                                          id: product.id,
-                                          name: product.name ?? 'Senza nome',
-                                          code: product.code ?? '',
-                                          thumbnail: product.thumbnail ?? '',
-                                          subTotal: product.price ?? 0.0,
-                                          productsQTY: 1,
-                                        );
-                                        await cartBox.add(cartModel);
-                                      },
+                                onPressed: () {
+                                  if (inCart) {
+                                    // ── ya en carrito: ir directo ──
+                                    ref
+                                        .read(selectedIndexProvider.notifier)
+                                        .state = 3;
+                                    ref
+                                        .read(bottomTabControllerProvider)
+                                        .jumpToPage(3);
+                                  } else {
+                                    // ── no en carrito: abrir sheet ──
+                                    ProductDetailSheet.show(context,
+                                        product: product);
+                                  }
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor:
-                                      alreadyInCart ? Colors.grey : Colors.blue,
+                                      inCart ? Colors.green : Colors.blue,
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 16.w),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12.w),
                                 ),
-                                // FIX: testo in italiano
-                                child: Text(alreadyInCart
-                                    ? 'Nel carrello'
-                                    : 'Aggiungi'),
+                                child: Text(
+                                  inCart ? 'Vai al carrello' : 'Aggiungi',
+                                  style: TextStyle(fontSize: 12.sp),
+                                ),
                               ),
                             );
                           },
@@ -527,9 +528,131 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
             ),
           ],
         ),
-      ), // cierra InkWell
+      ),
     );
   }
+  // Widget _buildProductCard(Product product) {
+  //   final box = Hive.box<HiveCartModel>(AppConstants.cartBox);
+  //   final inCart = box.values.any((e) => e.id == product.id);
+
+  //   // FIX BUG-014: la card entera abre el popup de detalle
+  //   return InkWell(
+  //     onTap: () => ProductDetailSheet.show(context, product: product),
+  //     borderRadius: BorderRadius.circular(8.r),
+  //     child: Container(
+  //       height: 120.h,
+  //       decoration: BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.circular(8.r),
+  //         boxShadow: [
+  //           BoxShadow(
+  //               color: Colors.grey.withOpacity(0.1),
+  //               spreadRadius: 1,
+  //               blurRadius: 3)
+  //         ],
+  //       ),
+  //       child: Row(
+  //         children: [
+  //           ClipRRect(
+  //             borderRadius: BorderRadius.horizontal(left: Radius.circular(8.r)),
+  //             child: _networkImage(product.thumbnail, w: 120.w, h: 120.h),
+  //           ),
+  //           Expanded(
+  //             child: Padding(
+  //               padding: EdgeInsets.all(12.r),
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Text(product.name ?? '',
+  //                           style: AppTextStyle.normalBody
+  //                               .copyWith(fontWeight: FontWeight.w600),
+  //                           maxLines: 1,
+  //                           overflow: TextOverflow.ellipsis),
+  //                       if (product.brand != null)
+  //                         Text(product.brand!,
+  //                             style: AppTextStyle.smallBody
+  //                                 .copyWith(color: Colors.grey)),
+  //                     ],
+  //                   ),
+  //                   Row(
+  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                     children: [
+  //                       Text(
+  //                         // FIX BUG-013: formato correcto €XX.XX
+  //                         '${(product.price ?? 0.0).toStringAsFixed(2)} €',
+  //                         style: AppTextStyle.normalBody.copyWith(
+  //                             fontWeight: FontWeight.w600, color: Colors.blue),
+  //                       ),
+  //                       // FIX BUG-010: ValueListenableBuilder eliminado del onPressed.
+  //                       // Se usa ValueListenableBuilder correctamente para reconstruir el botón.
+  //                       ValueListenableBuilder<Box<HiveCartModel>>(
+  //                         valueListenable:
+  //                             Hive.box<HiveCartModel>(AppConstants.cartBox)
+  //                                 .listenable(),
+  //                         builder: (context, cartBox, _) {
+  //                           final alreadyInCart =
+  //                               cartBox.values.any((e) => e.id == product.id);
+  //                           return SizedBox(
+  //                             height: 32.h,
+  //                             child: ElevatedButton(
+  //                               onPressed: () async {
+  //                                 final existingKeys = cartBox.keys.where(
+  //                                   (k) => cartBox.get(k)?.id == product.id,
+  //                                 ).toList();
+
+  //                                 if (existingKeys.isNotEmpty) {
+  //                                   final key = existingKeys.first;
+  //                                   final old = cartBox.get(key)!;
+  //                                   await cartBox.put(
+  //                                     key,
+  //                                     HiveCartModel(
+  //                                       id: old.id,
+  //                                       name: old.name,
+  //                                       code: old.code,
+  //                                       thumbnail: old.thumbnail,
+  //                                       subTotal: old.subTotal + (product.price ?? 0.0),
+  //                                       productsQTY: old.productsQTY + 1,
+  //                                     ),
+  //                                   );
+  //                                 } else {
+  //                                   await cartBox.add(
+  //                                     HiveCartModel(
+  //                                       id: product.id,
+  //                                       name: product.name ?? 'Senza nome',
+  //                                       code: product.code ?? '',
+  //                                       thumbnail: product.thumbnail ?? '',
+  //                                       subTotal: product.price ?? 0.0,
+  //                                       productsQTY: 1,
+  //                                     ),
+  //                                   );
+  //                                 }
+  //                               },
+  //                               style: ElevatedButton.styleFrom(
+  //                                 backgroundColor: Colors.blue,
+  //                                 foregroundColor: Colors.white,
+  //                                 padding: EdgeInsets.symmetric(horizontal: 16.w),
+  //                               ),
+  //                               // FIX: testo in italiano
+  //                               child: const Text('Aggiungi'),
+  //                             ),
+  //                           );
+  //                         },
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ), // cierra InkWell
+  //   );
+  // }
 
   // ─── BUILD ────────────────────────────────────────────────────────────────
 
@@ -545,12 +668,15 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                 ? AppColor.darkBackgroundColor
                 : AppColor.whiteColor,
             padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Gap(30.h),
-                const LogoSection(),
-              ],
+            child: SafeArea(  // ← muévelo aquí
+              bottom: false,  // solo top
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Gap(8.h),  // ← reduce el Gap(30.h) que tenías
+                  const LogoSection(),
+                ],
+              ),
             ),
           ),
           // Search bar
@@ -565,49 +691,45 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                     blurRadius: 3)
               ],
             ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Builder(
-                    builder: (ctx) => IconButton(
-                      icon: const Icon(Icons.menu),
-                      onPressed: () => Scaffold.of(ctx).openDrawer(),
-                    ),
+            child: Row(  // ← SafeArea eliminado, directo al Row
+              children: [
+                Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.of(ctx).openDrawer(),
                   ),
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8.r),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(16.r)),
+                        ),
+                        builder: (_) => const GlobalSearchSheet(),
                       ),
-                      child: GestureDetector(
-                        onTap: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(16.r)),
-                          ),
-                          builder: (_) => const GlobalSearchSheet(),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.search, color: Colors.grey),
-                            Gap(8.w),
-                            Text('Cerca (opere, autori)...',
-                                style: TextStyle(
-                                    fontSize: 14.sp, color: Colors.grey[400])),
-                          ],
-                        ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, color: Colors.grey),
+                          Gap(8.w),
+                          Text('Cerca (opere, autori)...',
+                              style: TextStyle(
+                                  fontSize: 14.sp, color: Colors.grey[400])),
+                        ],
                       ),
                     ),
                   ),
-                  IconButton(
-                      icon: const Icon(Icons.filter_list), onPressed: () {}),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           // Scrollable content
@@ -699,7 +821,7 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                             _sectionHeader('Le nostre Collezioni',
                                 onSeeAll: () => Navigator.pushNamed(
                                     context, Routes.collectionsListView)),
-                            Gap(12.h),
+                            Gap(6.h),
                             if (isLoading)
                               const Center(child: CircularProgressIndicator())
                             else if (collections == null || collections.isEmpty)
@@ -709,7 +831,7 @@ class _DashBoardLayoutState extends ConsumerState<DashBoardLayout> {
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: collections.length,
-                                separatorBuilder: (_, __) => Gap(8.h),
+                                separatorBuilder: (_, __) => Gap(2.h),
                                 itemBuilder: (_, i) => _buildCollectionItem(
                                   collections[i].name,
                                   collections[i].description, // FIX BUG-003

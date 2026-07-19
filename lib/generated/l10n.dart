@@ -827,7 +827,7 @@ class S {
   /// `POS`
   String get pos {
     return Intl.message(
-      'POS',
+      'Carrello',
       name: 'pos',
       desc: '',
       args: [],
@@ -967,7 +967,7 @@ class S {
   /// `Email Address`
   String get emailAddress {
     return Intl.message(
-      'Email Address',
+      'E-mail',
       name: 'emailAddress',
       desc: '',
       args: [],

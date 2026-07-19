@@ -65,6 +65,7 @@ class __PasswordState extends ConsumerState<_Password> {
   bool isCurrentPassVisible = false;
   bool isNewPassVisible = false;
   bool isConfirmPassVisible = false;
+
   Row textFieldHeader({required String text}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,181 +98,185 @@ class __PasswordState extends ConsumerState<_Password> {
           : AppColor.whiteColor,
       child: FormBuilder(
         key: _passowordFormKey,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(
-            S.of(context).password.toUpperCase(),
-            style: AppTextStyle.title.copyWith(
-              letterSpacing: 3.0,
-              fontSize: 14.sp,
-            ),
-          ),
-          Gap(24.h),
-          textFieldHeader(text: S.of(context).currentPassword),
-          Gap(8.h),
-          FormBuilderTextField(
-            name: "current_password",
-            obscureText: !isCurrentPassVisible,
-            style: isLargeScreen
-                ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
-                : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
-            decoration: AppTheme.inputDecoration.copyWith(
-              hintText: "Enter Current Password",
-              hintStyle: isLargeScreen
-                  ? AppTextStyle.normalBody.copyWith(
-                      fontSize: 12.sp,
-                      color: AppColor.borderColor,
-                    )
-                  : AppTextStyle.normalBody.copyWith(
-                      fontSize: 14.sp,
-                      color: AppColor.borderColor,
-                    ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 10.w,
-                vertical: 8.h,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              S.of(context).password.toUpperCase(),
+              style: AppTextStyle.title.copyWith(
+                letterSpacing: 3.0,
+                fontSize: 14.sp,
               ),
-              suffixIcon: IconButton(
-                onPressed: () {
-                  setState(() {
-                    isCurrentPassVisible = !isCurrentPassVisible;
-                  });
-                },
-                icon: Icon(
-                  isCurrentPassVisible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+            ),
+            Gap(24.h),
+            textFieldHeader(text: 'Password Attuale'),
+            Gap(8.h),
+            FormBuilderTextField(
+              name: "current_password",
+              obscureText: !isCurrentPassVisible,
+              style: isLargeScreen
+                  ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
+                  : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
+              decoration: AppTheme.inputDecoration.copyWith(
+                hintText: "Inserisci la password attuale",
+                hintStyle: isLargeScreen
+                    ? AppTextStyle.normalBody.copyWith(
+                        fontSize: 12.sp,
+                        color: AppColor.borderColor,
+                      )
+                    : AppTextStyle.normalBody.copyWith(
+                        fontSize: 14.sp,
+                        color: AppColor.borderColor,
+                      ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 8.h,
+                ),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isCurrentPassVisible = !isCurrentPassVisible;
+                    });
+                  },
+                  icon: Icon(
+                    isCurrentPassVisible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                 ),
               ),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                    errorText: "La password attuale è obbligatoria"),
+              ]),
             ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                  errorText: "Current Password is required"),
-            ]),
-          ),
-          Gap(24.h),
-          textFieldHeader(text: S.of(context).newPassword),
-          Gap(8.h),
-          FormBuilderTextField(
-            name: "password",
-            obscureText: !isNewPassVisible,
-            style: isLargeScreen
-                ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
-                : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
-            decoration: AppTheme.inputDecoration.copyWith(
-              hintText: "Enter New Password",
-              hintStyle: isLargeScreen
-                  ? AppTextStyle.normalBody.copyWith(
-                      fontSize: 12.sp,
-                      color: AppColor.borderColor,
-                    )
-                  : AppTextStyle.normalBody.copyWith(
-                      fontSize: 14.sp,
-                      color: AppColor.borderColor,
-                    ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 10.w,
-                vertical: 8.h,
-              ),
-              suffixIcon: IconButton(
-                onPressed: () {
-                  setState(() {
-                    isNewPassVisible = !isNewPassVisible;
-                  });
-                },
-                icon: Icon(
-                  isNewPassVisible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+            Gap(24.h),
+            textFieldHeader(text: 'Nuova Password'),
+            Gap(8.h),
+            FormBuilderTextField(
+              name: "password",
+              obscureText: !isNewPassVisible,
+              style: isLargeScreen
+                  ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
+                  : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
+              decoration: AppTheme.inputDecoration.copyWith(
+                hintText: "Inserisci la nuova password",
+                hintStyle: isLargeScreen
+                    ? AppTextStyle.normalBody.copyWith(
+                        fontSize: 12.sp,
+                        color: AppColor.borderColor,
+                      )
+                    : AppTextStyle.normalBody.copyWith(
+                        fontSize: 14.sp,
+                        color: AppColor.borderColor,
+                      ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 8.h,
+                ),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isNewPassVisible = !isNewPassVisible;
+                    });
+                  },
+                  icon: Icon(
+                    isNewPassVisible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                 ),
               ),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                    errorText: "La nuova password è obbligatoria"),
+              ]),
             ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                  errorText: "New Password is required"),
-            ]),
-          ),
-          Gap(24.h),
-          textFieldHeader(text: S.of(context).confirmPassword),
-          Gap(8.h),
-          FormBuilderTextField(
-            name: "password_confirmation",
-            obscureText: !isConfirmPassVisible,
-            style: isLargeScreen
-                ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
-                : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
-            decoration: AppTheme.inputDecoration.copyWith(
-              hintText: "Enter Confirm Password",
-              hintStyle: isLargeScreen
-                  ? AppTextStyle.normalBody.copyWith(
-                      fontSize: 12.sp,
-                      color: AppColor.borderColor,
-                    )
-                  : AppTextStyle.normalBody.copyWith(
-                      fontSize: 14.sp,
-                      color: AppColor.borderColor,
-                    ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 10.w,
-                vertical: 8.h,
-              ),
-              suffixIcon: IconButton(
-                onPressed: () {
-                  setState(() {
-                    isConfirmPassVisible = !isConfirmPassVisible;
-                  });
-                },
-                icon: Icon(
-                  isConfirmPassVisible
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+            Gap(24.h),
+            textFieldHeader(text: 'Conferma Password'),
+            Gap(8.h),
+            FormBuilderTextField(
+              name: "password_confirmation",
+              obscureText: !isConfirmPassVisible,
+              style: isLargeScreen
+                  ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
+                  : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
+              decoration: AppTheme.inputDecoration.copyWith(
+                hintText: "Conferma la nuova password",
+                hintStyle: isLargeScreen
+                    ? AppTextStyle.normalBody.copyWith(
+                        fontSize: 12.sp,
+                        color: AppColor.borderColor,
+                      )
+                    : AppTextStyle.normalBody.copyWith(
+                        fontSize: 14.sp,
+                        color: AppColor.borderColor,
+                      ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 10.w,
+                  vertical: 8.h,
+                ),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isConfirmPassVisible = !isConfirmPassVisible;
+                    });
+                  },
+                  icon: Icon(
+                    isConfirmPassVisible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                 ),
               ),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                    errorText: "La conferma password è obbligatoria"),
+                (val) {
+                  if (val !=
+                      _passowordFormKey.currentState!.value['password']) {
+                    return 'Le password non coincidono';
+                  }
+                  return null;
+                },
+              ]),
             ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                  errorText: "Confirm Password is required"),
-              (val) {
-                if (val != _passowordFormKey.currentState!.value['password']) {
-                  return 'Passwords do not match';
-                }
-                return null;
-              },
-            ]),
-          ),
-          Gap(24.h),
-          Consumer(builder: (context, ref, _) {
-            final isLoading = ref.watch(passwordChangeControllerProvider);
-            return SizedBox(
-              width: double.infinity,
-              child: isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  : CustomButton(
-                      onPressed: () {
-                        if (_passowordFormKey.currentState!.saveAndValidate()) {
-                          final formData = {
-                            ..._passowordFormKey.currentState!.value
-                          };
-
-                          ref
-                              .read(passwordChangeControllerProvider.notifier)
-                              .passwordChange(formData)
-                              .then((value) {
-                            if (value) {
-                              _passowordFormKey.currentState!.reset();
-                              GlobalFunction.showCustomSnackbar(
-                                  message: "Password Change Successfully",
-                                  isSuccess: true);
-                            }
-                          });
-                        }
-                      },
-                      text: S.of(context).update,
-                    ),
-            );
-          }),
-          Gap(15.h),
-        ]),
+            Gap(24.h),
+            Consumer(builder: (context, ref, _) {
+              final isLoading = ref.watch(passwordChangeControllerProvider);
+              return SizedBox(
+                width: double.infinity,
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : CustomButton(
+                        onPressed: () {
+                          if (_passowordFormKey.currentState!
+                              .saveAndValidate()) {
+                            final formData = {
+                              ..._passowordFormKey.currentState!.value
+                            };
+                            ref
+                                .read(
+                                    passwordChangeControllerProvider.notifier)
+                                .passwordChange(formData)
+                                .then((value) {
+                              if (value) {
+                                _passowordFormKey.currentState!.reset();
+                                GlobalFunction.showCustomSnackbar(
+                                    message:
+                                        "Password modificata con successo",
+                                    isSuccess: true);
+                              }
+                            });
+                          }
+                        },
+                        text: 'Aggiornamento',
+                      ),
+              );
+            }),
+            Gap(15.h),
+          ],
+        ),
       ),
     );
   }
@@ -329,263 +334,171 @@ class _PersonalInfoState extends State<_PersonalInfo> {
   Widget build(BuildContext context) {
     final isLargeScreen = MediaQuery.sizeOf(context).shortestSide > 600;
     return ValueListenableBuilder(
-        valueListenable: Hive.box(AppConstants.authBox).listenable(),
-        builder: (context, authBox, _) {
-          return Container(
-            margin: EdgeInsets.only(top: 12.h),
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
-            color: AdaptiveTheme.of(context).mode.isDark
-                ? AppColor.darkBackgroundColor
-                : AppColor.whiteColor,
-            child: FormBuilder(
-              key: _personalFormKey,
-              initialValue: {
-                "name": authBox.get(AppConstants.userData)['name'],
-                "email": authBox.get(AppConstants.userData)['email'],
-                "phone": authBox.get(AppConstants.userData)['phone'],
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    S.of(context).personalInfo.toUpperCase(),
-                    style: AppTextStyle.title.copyWith(
-                      letterSpacing: 3.0,
-                      fontSize: 14.sp,
-                    ),
+      valueListenable: Hive.box(AppConstants.authBox).listenable(),
+      builder: (context, authBox, _) {
+        return Container(
+          margin: EdgeInsets.only(top: 12.h),
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
+          color: AdaptiveTheme.of(context).mode.isDark
+              ? AppColor.darkBackgroundColor
+              : AppColor.whiteColor,
+          child: FormBuilder(
+            key: _personalFormKey,
+            initialValue: {
+              "name": authBox.get(AppConstants.userData)['name'],
+              "email": authBox.get(AppConstants.userData)['email'],
+              "phone": authBox.get(AppConstants.userData)['phone'],
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Informazioni Personali',
+                  style: AppTextStyle.title.copyWith(
+                    letterSpacing: 3.0,
+                    fontSize: 14.sp,
                   ),
-                  Gap(24.h),
-                  textFieldHeader(text: S.of(context).fullName),
-                  Gap(8.h),
-                  FormBuilderTextField(
-                    name: "name",
-                    style: isLargeScreen
-                        ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
-                        : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
-                    decoration: AppTheme.inputDecoration.copyWith(
-                      hintText: "Enter Name",
-                      // isDense: true,
-                      hintStyle: isLargeScreen
-                          ? AppTextStyle.normalBody.copyWith(
-                              fontSize: 12.sp,
-                              color: AppColor.borderColor,
-                            )
-                          : AppTextStyle.normalBody.copyWith(
-                              fontSize: 14.sp,
-                              color: AppColor.borderColor,
-                            ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 8.h,
-                      ),
-                    ),
-                    validator: FormBuilderValidators.compose([
-                      FormBuilderValidators.required(
-                          errorText: "Name is required"),
-                    ]),
-                  ),
-                  Gap(24.h),
-                  textFieldHeader(text: S.of(context).emailAddress),
-                  Gap(8.h),
-                  FormBuilderTextField(
-                      name: "email",
-                      style: isLargeScreen
-                          ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
-                          : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
-                      decoration: AppTheme.inputDecoration.copyWith(
-                        hintText: "Enter Email Address",
-                        hintStyle: isLargeScreen
-                            ? AppTextStyle.normalBody.copyWith(
-                                fontSize: 12.sp,
-                                color: AppColor.borderColor,
-                              )
-                            : AppTextStyle.normalBody.copyWith(
-                                fontSize: 14.sp,
-                                color: AppColor.borderColor,
-                              ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 10.w,
-                          vertical: 8.h,
-                        ),
-                      ),
-                      validator: FormBuilderValidators.compose([
-                        FormBuilderValidators.required(
-                            errorText: "Email is required"),
-                        FormBuilderValidators.email(errorText: "Invalid Email"),
-                      ])),
-                  Gap(24.h),
-                  textFieldHeader(text: S.of(context).phoneNumber),
-                  Gap(8.h),
-                  FormBuilderTextField(
-                    name: "phone",
-                    keyboardType: TextInputType.number,
-                    style: isLargeScreen
-                        ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
-                        : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
-                    decoration: AppTheme.inputDecoration.copyWith(
-                      hintText: "Enter Phone Number",
-                      hintStyle: isLargeScreen
-                          ? AppTextStyle.normalBody.copyWith(
-                              fontSize: 12.sp,
-                              color: AppColor.borderColor,
-                            )
-                          : AppTextStyle.normalBody.copyWith(
-                              fontSize: 14.sp,
-                              color: AppColor.borderColor,
-                            ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 8.h,
-                      ),
-                    ),
-                    validator: FormBuilderValidators.compose([
-                      FormBuilderValidators.required(
-                          errorText: "Phone Number is required"),
-                      FormBuilderValidators.maxLength(12,
-                          errorText: "Invalid Phone Number"),
-                      FormBuilderValidators.minLength(10,
-                          errorText: "Invalid Phone Number"),
-                    ]),
-                  ),
-                  Gap(24.h),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: AppColor.borderColor,
-                      ),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(16.r),
-                          child: Text(S.of(context).profileImage,
-                              style: AppTextStyle.normalBody),
-                        ),
-                        _image != null
-                            ? Stack(
-                                children: [
-                                  Container(
-                                    height: 62.h,
-                                    width: 62.w,
-                                    margin: EdgeInsets.all(8.r),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                      image: DecorationImage(
-                                        image: FileImage(File(_image!.path)),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 3.w,
-                                    top: 2.h,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColor.redColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _image = null;
-                                          });
-                                        },
-                                        child: Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                          size: 20.r,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Container(
-                                margin: EdgeInsets.all(16.r),
-                                // height: context.isTabletLandsCape ? 80.h : 48.h,
-                                width: 160.w,
-                                child: Material(
-                                  type: MaterialType.transparency,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(10.r),
-                                    onTap: () {
-                                      pickImage();
-                                    },
-                                    child: DottedBorder(
-                                      radius: Radius.circular(10.r),
-                                      borderType: BorderType.RRect,
-                                      dashPattern: const [5, 3],
-                                      color: AppColor.borderColor,
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 40.w, vertical: 12.h),
-                                        child: Row(
-                                          children: [
-                                            SvgPicture.asset(
-                                                Assets.svgs.upload),
-                                            Gap(8.w),
-                                            Text(
-                                              S.of(context).upload,
-                                              style: AppTextStyle.normalBody
-                                                  .copyWith(fontSize: 14.sp),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                      ],
-                    ),
-                  ),
-                  Gap(24.h),
-                  Consumer(builder: (context, ref, _) {
-                    final isLoading =
-                        ref.watch(profileUpdateControllerProvider);
-                    return isLoading
-                        ? const Center(
-                            child: CircularProgressIndicator(),
+                ),
+                Gap(24.h),
+                textFieldHeader(text: 'Nome'),
+                Gap(8.h),
+                FormBuilderTextField(
+                  name: "name",
+                  style: isLargeScreen
+                      ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
+                      : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
+                  decoration: AppTheme.inputDecoration.copyWith(
+                    hintText: "Inserisci il nome",
+                    hintStyle: isLargeScreen
+                        ? AppTextStyle.normalBody.copyWith(
+                            fontSize: 12.sp,
+                            color: AppColor.borderColor,
                           )
-                        : SizedBox(
-                            width: double.infinity,
-                            child: CustomButton(
-                              onPressed: () {
-                                if (_personalFormKey.currentState!
-                                    .saveAndValidate()) {
-                                  final formData = {
-                                    ..._personalFormKey.currentState!.value
-                                  };
-                                  if (_image != null) {
-                                    formData["image"] = _image!.path;
-                                  }
-                                  ref
-                                      .read(profileUpdateControllerProvider
-                                          .notifier)
-                                      .profileUpdate(formData)
-                                      .then((value) {
-                                    if (value) {
-                                      _personalFormKey.currentState!.reset();
-                                      _image = null;
-                                      GlobalFunction.showCustomSnackbar(
-                                          message:
-                                              "Profile Update Successfully",
-                                          isSuccess: true);
-                                    }
-                                  });
+                        : AppTextStyle.normalBody.copyWith(
+                            fontSize: 14.sp,
+                            color: AppColor.borderColor,
+                          ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 8.h,
+                    ),
+                  ),
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(
+                        errorText: "Il nome è obbligatorio"),
+                  ]),
+                ),
+                Gap(24.h),
+                textFieldHeader(text: 'E-mail'),
+                Gap(8.h),
+                FormBuilderTextField(
+                  name: "email",
+                  style: isLargeScreen
+                      ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
+                      : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
+                  decoration: AppTheme.inputDecoration.copyWith(
+                    hintText: "Inserisci l'email",
+                    hintStyle: isLargeScreen
+                        ? AppTextStyle.normalBody.copyWith(
+                            fontSize: 12.sp,
+                            color: AppColor.borderColor,
+                          )
+                        : AppTextStyle.normalBody.copyWith(
+                            fontSize: 14.sp,
+                            color: AppColor.borderColor,
+                          ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 8.h,
+                    ),
+                  ),
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(
+                        errorText: "L'email è obbligatoria"),
+                    FormBuilderValidators.email(
+                        errorText: "Email non valida"),
+                  ]),
+                ),
+                Gap(24.h),
+                textFieldHeader(text: 'Telefono'),
+                Gap(8.h),
+                FormBuilderTextField(
+                  name: "phone",
+                  keyboardType: TextInputType.number,
+                  style: isLargeScreen
+                      ? AppTextStyle.normalBody.copyWith(fontSize: 12.sp)
+                      : AppTextStyle.normalBody.copyWith(fontSize: 14.sp),
+                  decoration: AppTheme.inputDecoration.copyWith(
+                    hintText: "Inserisci il numero di telefono",
+                    hintStyle: isLargeScreen
+                        ? AppTextStyle.normalBody.copyWith(
+                            fontSize: 12.sp,
+                            color: AppColor.borderColor,
+                          )
+                        : AppTextStyle.normalBody.copyWith(
+                            fontSize: 14.sp,
+                            color: AppColor.borderColor,
+                          ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 8.h,
+                    ),
+                  ),
+                  validator: FormBuilderValidators.compose([
+                    FormBuilderValidators.required(
+                        errorText:
+                            "Il numero di telefono è obbligatorio"),
+                    FormBuilderValidators.maxLength(12,
+                        errorText: "Numero di telefono non valido"),
+                    FormBuilderValidators.minLength(10,
+                        errorText: "Numero di telefono non valido"),
+                  ]),
+                ),
+                Gap(24.h),
+                Gap(24.h),
+                Consumer(builder: (context, ref, _) {
+                  final isLoading =
+                      ref.watch(profileUpdateControllerProvider);
+                  return isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            onPressed: () {
+                              if (_personalFormKey.currentState!
+                                  .saveAndValidate()) {
+                                final formData = {
+                                  ..._personalFormKey.currentState!.value
+                                };
+                                if (_image != null) {
+                                  formData["image"] = _image!.path;
                                 }
-                              },
-                              text: S.of(context).update,
-                            ),
-                          );
-                  }),
-                ],
-              ),
+                                ref
+                                    .read(profileUpdateControllerProvider
+                                        .notifier)
+                                    .profileUpdate(formData)
+                                    .then((value) {
+                                  if (value) {
+                                    _personalFormKey.currentState!.reset();
+                                    _image = null;
+                                    GlobalFunction.showCustomSnackbar(
+                                        message:
+                                            "Profilo aggiornato con successo",
+                                        isSuccess: true);
+                                  }
+                                });
+                              }
+                            },
+                            text: 'Aggiornamento',
+                          ),
+                        );
+                }),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }

@@ -17,6 +17,7 @@ abstract class POSRepository {
     required String token,
     required int orderId,                                           // 👈 orderId
   });
+  Future<Response> getPosOrders();
 }
 
 class POSService implements POSRepository {
@@ -45,6 +46,11 @@ class POSService implements POSRepository {
     );
   }
 
+  @override
+  Future<Response> getPosOrders() {
+    return ref.read(apiClientProvider).get(AppConstants.posOrders);
+  }
+  
   @override
   Future<Response> store({required Map<String, dynamic> data}) {
     return ref.read(apiClientProvider).post(

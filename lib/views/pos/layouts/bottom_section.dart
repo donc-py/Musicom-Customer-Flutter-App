@@ -28,6 +28,7 @@ import 'package:readypos_flutter/views/pos/components/customer_shimmerEffect.dar
 import 'package:readypos_flutter/views/pos/paypal_webview_screen.dart';
 import 'package:readypos_flutter/controllers/pos_controller.dart/enums.dart';
 import 'package:readypos_flutter/services/pos_service_provider.dart';
+import 'package:readypos_flutter/views/pos/pos_orders_screen.dart';
 
 class BottomSection extends ConsumerWidget {
   const BottomSection({
@@ -132,7 +133,7 @@ class BottomSection extends ConsumerWidget {
                           content:
                               Column(mainAxisSize: MainAxisSize.min, children: [
                             Text(
-                              "Would you like to confirm the order?",
+                              "Desideri confermare l'ordine?",
                               style: AppTextStyle.title,
                               textAlign: TextAlign.center,
                             ),
@@ -148,7 +149,7 @@ class BottomSection extends ConsumerWidget {
                                     onPressed: () {
                                       Navigator.pop(context);
                                     },
-                                    text: "Cancel",
+                                    text: "Annulla",
                                     isBackgrounColor: false,
                                   ),
                                 ),
@@ -170,7 +171,7 @@ class BottomSection extends ConsumerWidget {
                                               context.nav.pop();
                                               GlobalFunction.showCustomSnackbar(
                                                 message:
-                                                    "Please add product first",
+                                                    "Aggiungi prima il prodotto",
                                                 isSuccess: false,
                                               );
                                               return;
@@ -179,7 +180,7 @@ class BottomSection extends ConsumerWidget {
                                             await posStore(
                                                 context: context, ref: ref);
                                           },
-                                          text: "Confirm",
+                                          text: "Confermare",
                                         ),
                                 ),
                               ],
@@ -190,7 +191,7 @@ class BottomSection extends ConsumerWidget {
                     );
                   },
                   isArrowRight: true,
-                  text: "Grand Total: ${currency.currencyValue(subTotal)}",
+                  text: "Totale: ${currency.currencyValue(subTotal)}",
                 ),
               ),
             )
@@ -304,80 +305,159 @@ class BottomSection extends ConsumerWidget {
 
     if (response == null) {
       GlobalFunction.showCustomSnackbar(
-          message: "Something went wrong", isSuccess: false);
+          message: "Qualcosa è andato storto", isSuccess: false);
       return;
     }
 
     // ── Flujo PayPal ──────────────────────────────────────────────────────
+    // if (paymentMethod == PaymentMethod.paypal) {
+    //   // Necesitamos el payment_id que ahora devuelve el backend
+    //   final orderId = response.orderId;
+
+    //   if (orderId == null) {
+    //     GlobalFunction.showCustomSnackbar(
+    //         message: "PayPal: ID di pagamento non ricevuto", isSuccess: false);
+    //     return;
+    //   }
+
+    //   // 1. Crear orden en PayPal via Laravel
+    //   final paypalResponse = await ref
+    //       .read(posServiceProvider)
+    //       .createPaypalOrder(orderId: orderId);
+
+    //   if (paypalResponse.statusCode != 200) {
+    //     GlobalFunction.showCustomSnackbar(
+    //         message: "Errore durante la connessione a PayPal", isSuccess: false);
+    //     return;
+    //   }
+
+    //   final approvalUrl =
+    //       paypalResponse.data['data']['approval_url'] as String?;
+      
+    //   final orderId2 = paypalResponse.data['data']['order_id'] as int;
+
+    //   if (approvalUrl == null) {
+    //     GlobalFunction.showCustomSnackbar(
+    //         message: "PayPal non ha restituito l'URL di approvazione", isSuccess: false);
+    //     return;
+    //   }
+
+    //   // 2. Cerrar el AlertDialog de confirmación
+    //   context.nav.pop();
+
+    //   // 3. Abrir WebView in-app de PayPal
+    //   final success = await Navigator.push<bool>(
+    //     context,
+    //     MaterialPageRoute(
+    //       builder: (_) => PaypalWebViewScreen(
+    //         approvalUrl: approvalUrl,
+    //         orderId: orderId2,
+    //       ),
+    //     ),
+    //   );
+
+    //   if (success == true) {
+    //     // 4a. Pago exitoso — limpiar y navegar igual que Cash
+    //     cartBox.clear();
+    //     ref.read(cuponControllerProvider.notifier).clearCupon();
+    //     ref.read(selectedCustomerProvider.notifier).state = null;
+    //     ref.read(cartController.notifier).clearFiles();
+
+    //     GlobalFunction.showCustomSnackbar(
+    //         message: "Pagamento PayPal completato", isSuccess: true);
+    //     ref.read(selectedIndexProvider.notifier).state = 0;
+    //     ref.read(bottomTabControllerProvider.notifier).state.jumpToPage(0);
+    //     Navigator.push(
+    //       context,
+    //       MaterialPageRoute(
+    //         builder: (_) => const PosOrdersScreen(),
+    //       ),
+    //     );
+    //   } else {
+    //     // 4b. Usuario canceló o falló — la orden ya existe en BD,
+    //     // podrías marcarla como cancelada o simplemente avisar
+    //     GlobalFunction.showCustomSnackbar(
+    //         message: "Pagamento PayPal annullato", isSuccess: false);
+    //   }
+
+    //   return; // 👈 importante: no continuar al flujo Cash
+    // }
+
     if (paymentMethod == PaymentMethod.paypal) {
-      // Necesitamos el payment_id que ahora devuelve el backend
       final orderId = response.orderId;
 
       if (orderId == null) {
         GlobalFunction.showCustomSnackbar(
-            message: "PayPal: no se recibió payment_id", isSuccess: false);
+            message: "PayPal: no se recibió order_id", isSuccess: false);
         return;
       }
 
-      // 1. Crear orden en PayPal via Laravel
       final paypalResponse = await ref
           .read(posServiceProvider)
           .createPaypalOrder(orderId: orderId);
 
       if (paypalResponse.statusCode != 200) {
         GlobalFunction.showCustomSnackbar(
-            message: "Error al conectar con PayPal", isSuccess: false);
+            message: "Errore connessione PayPal", isSuccess: false);
         return;
       }
 
-      final approvalUrl =
-          paypalResponse.data['data']['approval_url'] as String?;
-      
-      final orderId2 = paypalResponse.data['data']['order_id'] as int;
+      final approvalUrl = paypalResponse.data['data']['approval_url'] as String?;
+      final paypalOrderId = paypalResponse.data['data']['order_id'] as int;
 
       if (approvalUrl == null) {
         GlobalFunction.showCustomSnackbar(
-            message: "PayPal no devolvió URL de aprobación", isSuccess: false);
+            message: "PayPal: URL non ricevuto", isSuccess: false);
         return;
       }
 
-      // 2. Cerrar el AlertDialog de confirmación
+      // 👇 Cerrar el dialog ANTES de navegar al WebView
       context.nav.pop();
 
-      // 3. Abrir WebView in-app de PayPal
+      // 👇 Guardar ref antes de operaciones async
+      final posService = ref.read(posServiceProvider);
+      final cuponNotifier = ref.read(cuponControllerProvider.notifier);
+      final cartNotifier = ref.read(cartController.notifier);
+      final selectedCustomerNotifier = ref.read(selectedCustomerProvider.notifier);
+      final selectedIndexNotifier = ref.read(selectedIndexProvider.notifier);
+      final bottomTabNotifier = ref.read(bottomTabControllerProvider.notifier);
+
       final success = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
           builder: (_) => PaypalWebViewScreen(
             approvalUrl: approvalUrl,
-            orderId: orderId2,
+            orderId: paypalOrderId,
           ),
         ),
       );
 
       if (success == true) {
-        // 4a. Pago exitoso — limpiar y navegar igual que Cash
         cartBox.clear();
-        ref.read(cuponControllerProvider.notifier).clearCupon();
-        ref.read(selectedCustomerProvider.notifier).state = null;
-        ref.read(cartController.notifier).clearFiles();
+        cuponNotifier.clearCupon();
+        selectedCustomerNotifier.state = null;
+        cartNotifier.clearFiles();
 
         GlobalFunction.showCustomSnackbar(
-            message: "Pago con PayPal completado", isSuccess: true);
-        ref.read(selectedIndexProvider.notifier).state = 0;
-        ref.read(bottomTabControllerProvider.notifier).state.jumpToPage(0);
-        context.nav.pushNamed(
-          Routes.pdfView,
-          arguments: response.invoicePDFUrl,
-        );
+            message: "Pagamento PayPal completato", isSuccess: true);
+
+        selectedIndexNotifier.state = 0;
+        bottomTabNotifier.state.jumpToPage(0);
+
+        //if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const PosOrdersScreen(),
+            ),
+          );
+        //}
       } else {
-        // 4b. Usuario canceló o falló — la orden ya existe en BD,
-        // podrías marcarla como cancelada o simplemente avisar
         GlobalFunction.showCustomSnackbar(
-            message: "Pago con PayPal cancelado", isSuccess: false);
+            message: "Pagamento PayPal annullato", isSuccess: false);
       }
 
-      return; // 👈 importante: no continuar al flujo Cash
+      return;
     }
 
     // ── Flujo Cash / OrangeMoney (exactamente igual que antes) ───────────
@@ -389,16 +469,19 @@ class BottomSection extends ConsumerWidget {
     if (ref.read(selectedPaymentMethodProvider).index == 1) {
       context.nav.pop();
       GlobalFunction.showCustomSnackbar(
-          message: "Order successfully Draft", isSuccess: true);
+          message: "Ordine salvato come bozza", isSuccess: true);
     } else {
       context.nav.pop();
       GlobalFunction.showCustomSnackbar(
-          message: "Order successfully Placed", isSuccess: true);
+          message: "Ordine confermato con successo", isSuccess: true);
       ref.read(selectedIndexProvider.notifier).state = 0;
       ref.read(bottomTabControllerProvider.notifier).state.jumpToPage(0);
-      context.nav.pushNamed(
-        Routes.pdfView,
-        arguments: response.invoicePDFUrl,
+      // 👇 Reemplaza el pushNamed de pdfView por esto:
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const PosOrdersScreen(),
+        ),
       );
     }
   }

@@ -1,19 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:readypos_flutter/config/app_color.dart';
 import 'package:readypos_flutter/config/app_constants.dart';
 import 'package:readypos_flutter/config/app_text.dart';
+import 'package:readypos_flutter/controllers/misc/misc_provider.dart';
 import 'package:readypos_flutter/models/cart_models/hive_cart_model.dart';
 import 'package:readypos_flutter/models/product_model.dart';
 
-/// Llama con:
-/// ```dart
-/// ProductDetailSheet.show(context, product: product);
-/// ```
-class ProductDetailSheet extends StatefulWidget {
+class ProductDetailSheet extends ConsumerStatefulWidget {
   final Product product;
   const ProductDetailSheet({super.key, required this.product});
 
@@ -30,20 +28,68 @@ class ProductDetailSheet extends StatefulWidget {
   }
 
   @override
-  State<ProductDetailSheet> createState() => _ProductDetailSheetState();
+  ConsumerState<ProductDetailSheet> createState() =>
+      _ProductDetailSheetState();
 }
 
-class _ProductDetailSheetState extends State<ProductDetailSheet> {
+class _ProductDetailSheetState extends ConsumerState<ProductDetailSheet> {
   int _qty = 1;
+  dynamic _cartKey; // key en Hive si ya está en carrito
+
+  Box<HiveCartModel> get _box =>
+      Hive.box<HiveCartModel>(AppConstants.cartBox);
+
+  @override
+  void initState() {
+    super.initState();
+    // ── leer qty real del carrito al abrir ──────────────────────
+    final key = _box.keys.firstWhere(
+      (k) => _box.get(k)?.id == widget.product.id,
+      orElse: () => null,
+    );
+    if (key != null) {
+      _cartKey = key;
+      _qty = _box.get(key)!.productsQTY;
+    }
+  }
+
+  bool get _inCart => _cartKey != null;
+  double get _price => widget.product.price ?? 0.0;
+  double get _total => _price * _qty;
+
+  // ── actualiza qty en Hive si ya está en carrito ──────────────
+  Future<void> _updateCartQty(int newQty) async {
+    if (!_inCart) {
+      setState(() => _qty = newQty);
+      return;
+    }
+    final old = _box.get(_cartKey)!;
+    await _box.put(
+      _cartKey,
+      HiveCartModel(
+        id: old.id,
+        name: old.name,
+        code: old.code,
+        thumbnail: old.thumbnail,
+        subTotal: _price * newQty,
+        productsQTY: newQty,
+      ),
+    );
+    setState(() => _qty = newQty);
+  }
+
+  // ── navega al tab Carrello ────────────────────────────────────
+  void _goToCart() {
+    Navigator.pop(context);
+    ref.read(selectedIndexProvider.notifier).state = 3;
+    ref.read(bottomTabControllerProvider).jumpToPage(3);
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = widget.product;
-    final price = p.price ?? 0.0;
-    final total = price * _qty;
 
     return Padding(
-      // sube el sheet sobre el teclado si aparece
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
@@ -51,7 +97,7 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── handle ────────────────────────────────────────────────────
+            // ── handle ───────────────────────────────────────────
             Center(
               child: Container(
                 margin: EdgeInsets.symmetric(vertical: 10.h),
@@ -64,10 +110,11 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
               ),
             ),
 
-            // ── imagen ────────────────────────────────────────────────────
+            // ── imagen ───────────────────────────────────────────
             if (p.thumbnail != null && p.thumbnail!.isNotEmpty)
               ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(20.r)),
                 child: CachedNetworkImage(
                   imageUrl: p.thumbnail!,
                   width: double.infinity,
@@ -76,8 +123,8 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
                   errorWidget: (_, __, ___) => Container(
                     height: 220.h,
                     color: Colors.grey[100],
-                    child:
-                        Icon(Icons.image, color: Colors.grey[300], size: 48.r),
+                    child: Icon(Icons.image,
+                        color: Colors.grey[300], size: 48.r),
                   ),
                 ),
               )
@@ -86,29 +133,31 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
                 height: 120.h,
                 color: Colors.grey[100],
                 child: Center(
-                    child:
-                        Icon(Icons.image, color: Colors.grey[300], size: 48.r)),
+                    child: Icon(Icons.image,
+                        color: Colors.grey[300], size: 48.r)),
               ),
 
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              padding:
+                  EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── nombre + precio ──────────────────────────────────────
+                  // ── nombre + precio ──────────────────────────
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(p.name ?? '',
-                            style:
-                                AppTextStyle.title.copyWith(fontSize: 20.sp)),
+                            style: AppTextStyle.title
+                                .copyWith(fontSize: 20.sp)),
                       ),
                       Gap(12.w),
                       Text(
-                        '${price.toStringAsFixed(2)} €',
+                        '${_price.toStringAsFixed(2)} €',
                         style: AppTextStyle.title.copyWith(
-                            fontSize: 20.sp, color: AppColor.primaryColor),
+                            fontSize: 20.sp,
+                            color: AppColor.primaryColor),
                       ),
                     ],
                   ),
@@ -124,7 +173,6 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
                   Divider(color: Colors.grey[200]),
                   Gap(12.h),
 
-                  // ── detalles ─────────────────────────────────────────────
                   if (p.code != null && p.code!.isNotEmpty)
                     _detailRow('Codice', p.code!),
                   if (p.category != null && p.category!.isNotEmpty)
@@ -132,7 +180,7 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
 
                   Gap(20.h),
 
-                  // ── selector de cantidad ─────────────────────────────────
+                  // ── selector cantidad ────────────────────────
                   Row(
                     children: [
                       Text('Quantità',
@@ -142,93 +190,78 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
                       _qtyButton(
                         icon: Icons.remove,
                         active: _qty > 1,
-                        onTap: () {
-                          if (_qty > 1) setState(() => _qty--);
-                        },
+                        onTap: _qty > 1
+                            ? () => _updateCartQty(_qty - 1)
+                            : null,
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: Text('$_qty',
-                            style:
-                                AppTextStyle.title.copyWith(fontSize: 18.sp)),
+                            style: AppTextStyle.title
+                                .copyWith(fontSize: 18.sp)),
                       ),
                       _qtyButton(
                         icon: Icons.add,
                         active: true,
-                        onTap: () => setState(() => _qty++),
+                        onTap: () => _updateCartQty(_qty + 1),
                       ),
                     ],
                   ),
 
                   Gap(12.h),
 
-                  // ── total ────────────────────────────────────────────────
+                  // ── total ────────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Totale',
                           style: AppTextStyle.normalBody
                               .copyWith(color: Colors.grey)),
-                      Text('${total.toStringAsFixed(2)} €',
+                      Text('${_total.toStringAsFixed(2)} €',
                           style: AppTextStyle.title.copyWith(
-                              fontSize: 18.sp, color: AppColor.primaryColor)),
+                              fontSize: 18.sp,
+                              color: AppColor.primaryColor)),
                     ],
                   ),
 
                   Gap(20.h),
 
-                  // ── botón aggiungi al carrello (FIX BUG-014) ─────────────
-                  ValueListenableBuilder<Box<HiveCartModel>>(
-                    valueListenable:
-                        Hive.box<HiveCartModel>(AppConstants.cartBox)
-                            .listenable(),
-                    builder: (context, box, _) {
-                      final inCart = box.values.any((e) => e.id == p.id);
-                      return SizedBox(
-                        width: double.infinity,
-                        height: 50.h,
-                        child: ElevatedButton(
-                          onPressed: inCart
-                              ? null
-                              : () async {
-                                  await box.add(HiveCartModel(
-                                    id: p.id,
-                                    name: p.name ?? 'Prodotto',
-                                    code: p.code ?? '',
-                                    thumbnail: p.thumbnail ?? '',
-                                    subTotal: price * _qty,
-                                    productsQTY: _qty,
-                                  ));
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      behavior: SnackBarBehavior.floating,
-                                      content: Text(
-                                          '${p.name} aggiunto al carrello'),
-                                      backgroundColor: Colors.green,
-                                    ));
-                                  }
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                inCart ? Colors.grey : AppColor.primaryColor,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                          ),
-                          child: Text(
-                            inCart
-                                ? 'Già nel carrello'
-                                : 'Aggiungi al carrello  •  ${total.toStringAsFixed(2)} €',
-                            style: AppTextStyle.normalBody.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600),
-                          ),
+                  // ── botón principal ──────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50.h,
+                    child: ElevatedButton(
+                      onPressed: _inCart
+                          ? _goToCart
+                          : () async {
+                              final key = await _box.add(HiveCartModel(
+                                id: p.id,
+                                name: p.name ?? 'Prodotto',
+                                code: p.code ?? '',
+                                thumbnail: p.thumbnail ?? '',
+                                subTotal: _total,
+                                productsQTY: _qty,
+                              ));
+                              setState(() => _cartKey = key);
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _inCart
+                            ? Colors.green
+                            : AppColor.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
-                      );
-                    },
+                      ),
+                      child: Text(
+                        _inCart
+                            ? 'Vai al carrello'
+                            : 'Aggiungi al carrello  •  ${_total.toStringAsFixed(2)} €',
+                        style: AppTextStyle.normalBody.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   ),
 
                   Gap(12.h),
@@ -248,7 +281,8 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
             SizedBox(
               width: 90.w,
               child: Text(label,
-                  style: AppTextStyle.smallBody.copyWith(color: Colors.grey)),
+                  style: AppTextStyle.smallBody
+                      .copyWith(color: Colors.grey)),
             ),
             Expanded(
               child: Text(value,
@@ -259,10 +293,11 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
         ),
       );
 
-  Widget _qtyButton(
-      {required IconData icon,
-      required bool active,
-      required VoidCallback onTap}) {
+  Widget _qtyButton({
+    required IconData icon,
+    required bool active,
+    required VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -273,7 +308,8 @@ class _ProductDetailSheetState extends State<ProductDetailSheet> {
           borderRadius: BorderRadius.circular(8.r),
         ),
         child: Icon(icon,
-            size: 18.r, color: active ? Colors.white : Colors.grey[400]),
+            size: 18.r,
+            color: active ? Colors.white : Colors.grey[400]),
       ),
     );
   }

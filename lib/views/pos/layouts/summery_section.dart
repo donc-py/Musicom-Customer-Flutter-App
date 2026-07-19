@@ -44,28 +44,28 @@ class SummerySection extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  S.of(context).billSummary,
+                  "Riepilogo Fattura",
                   style: AppTextStyle.largeBody,
                 ),
                 Gap(12.h),
                 summeryItem(
                   context: context,
-                  title: "${S.of(context).totalItems}:",
+                  title: "Elementi:",
                   value: box.length.toString(),
                 ),
                 summeryItem(
                   context: context,
-                  title: "${S.of(context).totalAmount}:",
+                  title: "Subtotale:",
                   value: currency.currencyValue(cartData.totalAmount),
                 ),
                 summeryItem(
                   context: context,
-                  title: "${S.of(context).discount}:",
+                  title: "sconto:",
                   value: currency.currencyValue(cartData.discountedAmount),
                 ),
                 summeryItem(
                     context: context,
-                    title: S.of(context).coupon,
+                    title: 'Coupon',
                     isCupon: ref.watch(cartController.notifier).totalAmount > 0
                         ? true
                         : false,
@@ -89,7 +89,7 @@ class SummerySection extends ConsumerWidget {
                 Gap(8.h),
                 summeryItem(
                   context: context,
-                  title: S.of(context).grandTotal,
+                  title: 'Totale',
                   isBottomPadding: false,
                   isTotal: true,
                   value: currency.currencyValue(cartData.subTotalAmount),

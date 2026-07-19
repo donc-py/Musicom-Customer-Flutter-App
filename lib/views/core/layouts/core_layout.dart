@@ -177,6 +177,33 @@ class _BottomNavItem extends StatelessWidget {
 
 // ─── Scanner Nav Item (icono del logo, sin estado activo) ──────────────────
 
+// class _ScannerNavItem extends StatelessWidget {
+//   const _ScannerNavItem({required this.onTap});
+
+//   final VoidCallback onTap;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return InkWell(
+//       onTap: onTap,
+//       child: SizedBox(
+//         height: context.isTabletLandsCape ? 75.h : 68.h,
+//         width: 75.w,
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             SizedBox(
+//               height: context.isTabletLandsCape ? 34.h : 28.h,
+//               width: context.isTabletLandsCape ? 34.h : 28.h,
+//               child: Assets.pngs.icon.image(),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class _ScannerNavItem extends StatelessWidget {
   const _ScannerNavItem({required this.onTap});
 
@@ -192,10 +219,13 @@ class _ScannerNavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
-              height: context.isTabletLandsCape ? 34.h : 28.h,
-              width: context.isTabletLandsCape ? 34.h : 28.h,
-              child: Assets.pngs.icon.image(),
+            Transform.translate(
+              offset: Offset(0, -12.h), // ← sube el ícono 8 puntos
+              child: SizedBox(
+                height: context.isTabletLandsCape ? 34.h : 28.h,
+                width: context.isTabletLandsCape ? 34.h : 28.h,
+                child: Assets.pngs.icon.image(),
+              ),
             ),
           ],
         ),

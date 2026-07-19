@@ -132,168 +132,430 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
   // ─── biglietti ───────────────────────────────────────────────────────────
 
   // FIX: recibe Product completo para poder agregarlo al carrito
+  // Widget _buildTicketRow(Product ticket, int index) {
+  //   final isExpanded = _expandedTicketIndex == index;
+  //   // final qty = _quantities[index] ?? 1;
+  //   final currentInCart = Hive.box<HiveCartModel>(AppConstants.cartBox)
+  //       .values
+  //       .where((e) => e.id == ticket.id)
+  //       .fold(0, (sum, e) => sum + e.productsQTY);
+
+  //   final qty = currentInCart > 0 
+  //       ? (_quantities[index] ?? currentInCart)
+  //       : (_quantities[index] ?? 1);
+  //   final price = ticket.price ?? 0.0;
+  //   final total = price * qty;
+
+  //   return AnimatedContainer(
+  //     duration: const Duration(milliseconds: 200),
+  //     margin: EdgeInsets.only(bottom: 8.h),
+  //     decoration: BoxDecoration(
+  //       color:
+  //           isExpanded ? AppColor.primaryColor.withOpacity(0.06) : Colors.white,
+  //       borderRadius: BorderRadius.circular(10.r),
+  //       border: Border.all(
+  //         color: isExpanded
+  //             ? AppColor.primaryColor.withOpacity(0.3)
+  //             : Colors.grey[200]!,
+  //       ),
+  //     ),
+  //     child: Column(
+  //       children: [
+  //         // header row
+  //         InkWell(
+  //           borderRadius: BorderRadius.circular(10.r),
+  //           onTap: () => setState(() {
+  //             _expandedTicketIndex = isExpanded ? null : index;
+  //             if (!_quantities.containsKey(index)) _quantities[index] = 1;
+  //           }),
+  //           child: Padding(
+  //             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+  //             child: Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Text(ticket.name ?? '',
+  //                           style: AppTextStyle.normalBody
+  //                               .copyWith(fontWeight: FontWeight.w600)),
+  //                       if (ticket.brand != null)
+  //                         Text(ticket.brand!,
+  //                             style: AppTextStyle.smallBody.copyWith(
+  //                                 color: Colors.grey, fontSize: 11.sp)),
+  //                     ],
+  //                   ),
+  //                 ),
+  //                 Text('${price.toStringAsFixed(2)} €',
+  //                     style: AppTextStyle.normalBody.copyWith(
+  //                         decoration: TextDecoration.underline,
+  //                         fontSize: 14.sp)),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //         // expanded: quantity + checkout
+  //         if (isExpanded)
+  //           Padding(
+  //             padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
+  //             child: Container(
+  //               padding: EdgeInsets.all(12.r),
+  //               decoration: BoxDecoration(
+  //                 color: Colors.white,
+  //                 borderRadius: BorderRadius.circular(8.r),
+  //                 border: Border.all(color: Colors.grey[200]!),
+  //               ),
+  //               child: Column(
+  //                 children: [
+  //                   Row(
+  //                     children: [
+  //                       Text('Quantità',
+  //                           style: AppTextStyle.smallBody
+  //                               .copyWith(color: Colors.grey)),
+  //                       const Spacer(),
+  //                       _qtyButton(
+  //                         icon: Icons.remove,
+  //                         onTap: qty > 1
+  //                             ? () =>
+  //                                 setState(() => _quantities[index] = qty - 1)
+  //                             : null,
+  //                       ),
+  //                       Padding(
+  //                         padding: EdgeInsets.symmetric(horizontal: 12.w),
+  //                         child: Text('$qty',
+  //                             style: AppTextStyle.normalBody
+  //                                 .copyWith(fontWeight: FontWeight.w600)),
+  //                       ),
+  //                       _qtyButton(
+  //                         icon: Icons.add,
+  //                         onTap: () =>
+  //                             setState(() => _quantities[index] = qty + 1),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   Divider(height: 16.h, color: Colors.grey[200]),
+  //                   Row(
+  //                     children: [
+  //                       Text('Totale',
+  //                           style: AppTextStyle.smallBody
+  //                               .copyWith(color: Colors.grey)),
+  //                       Gap(8.w),
+  //                       Text('${total.toStringAsFixed(2)} €',
+  //                           style: AppTextStyle.normalBody
+  //                               .copyWith(fontWeight: FontWeight.w700)),
+  //                       const Spacer(),
+  //                       // FIX: botón checkout agrega al carrito Hive
+  //                       ValueListenableBuilder<Box<HiveCartModel>>(
+  //                         valueListenable:
+  //                             Hive.box<HiveCartModel>(AppConstants.cartBox)
+  //                                 .listenable(),
+  //                         builder: (context, box, _) {
+  //                           final inCart =
+  //                               box.values.any((e) => e.id == ticket.id);
+  //                           return SizedBox(
+  //                             height: 36.h,
+  //                             child: ElevatedButton(
+  //                               onPressed: () async {
+  //                                 final existingKeys = box.keys.where(
+  //                                   (k) => box.get(k)?.id == ticket.id,
+  //                                 ).toList();
+
+  //                                 if (existingKeys.isNotEmpty) {
+  //                                   final key = existingKeys.first;
+  //                                   final old = box.get(key)!;
+  //                                   await box.put(key, HiveCartModel(
+  //                                     id: old.id,
+  //                                     name: old.name,
+  //                                     code: old.code,
+  //                                     thumbnail: old.thumbnail,
+  //                                     subTotal: old.subTotal + (price * qty),
+  //                                     productsQTY: old.productsQTY + qty,
+  //                                   ));
+  //                                 } else {
+  //                                   await box.add(HiveCartModel(
+  //                                     id: ticket.id,
+  //                                     name: ticket.name ?? 'Biglietto',
+  //                                     code: ticket.code ?? '',
+  //                                     thumbnail: ticket.thumbnail ?? '',
+  //                                     subTotal: price * qty,
+  //                                     productsQTY: qty,
+  //                                   ));
+  //                                 }
+  //                                 setState(() => _expandedTicketIndex = null);
+  //                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //                                   behavior: SnackBarBehavior.floating,
+  //                                   content: Text('${ticket.name} aggiunto al carrello'),
+  //                                   backgroundColor: Colors.green,
+  //                                 ));
+  //                               },
+  //                               style: ElevatedButton.styleFrom(
+  //                                 backgroundColor: inCart
+  //                                     ? Colors.grey
+  //                                     : AppColor.primaryColor,
+  //                                 foregroundColor: Colors.white,
+  //                                 shape: RoundedRectangleBorder(
+  //                                     borderRadius: BorderRadius.circular(8.r)),
+  //                                 padding:
+  //                                     EdgeInsets.symmetric(horizontal: 20.w),
+  //                               ),
+  //                               child:
+  //                                   Text(inCart ? 'Nel carrello' : 'Aggiungi al carrello'),
+  //                             ),
+  //                           );
+  //                         },
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   Widget _buildTicketRow(Product ticket, int index) {
     final isExpanded = _expandedTicketIndex == index;
-    final qty = _quantities[index] ?? 1;
+    final box = Hive.box<HiveCartModel>(AppConstants.cartBox);
     final price = ticket.price ?? 0.0;
-    final total = price * qty;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      margin: EdgeInsets.only(bottom: 8.h),
-      decoration: BoxDecoration(
-        color:
-            isExpanded ? AppColor.primaryColor.withOpacity(0.06) : Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(
-          color: isExpanded
-              ? AppColor.primaryColor.withOpacity(0.3)
-              : Colors.grey[200]!,
-        ),
-      ),
-      child: Column(
-        children: [
-          // header row
-          InkWell(
+    return ValueListenableBuilder<Box<HiveCartModel>>(
+      valueListenable: box.listenable(),
+      builder: (context, cartBox, _) {
+        // ── leer qty REAL del carrito ──────────────────────────────
+        final cartKey = cartBox.keys.firstWhere(
+          (k) => cartBox.get(k)?.id == ticket.id,
+          orElse: () => null,
+        );
+        final cartItem = cartKey != null ? cartBox.get(cartKey) : null;
+        final inCart = cartItem != null;
+
+        // qty mostrado: si está en carrito usa ese valor, si no usa el local
+        final qty = inCart
+            ? cartItem!.productsQTY
+            : (_quantities[index] ?? 1);
+        final total = price * qty;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: EdgeInsets.only(bottom: 8.h),
+          decoration: BoxDecoration(
+            color: isExpanded
+                ? AppColor.primaryColor.withOpacity(0.06)
+                : Colors.white,
             borderRadius: BorderRadius.circular(10.r),
-            onTap: () => setState(() {
-              _expandedTicketIndex = isExpanded ? null : index;
-              if (!_quantities.containsKey(index)) _quantities[index] = 1;
-            }),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(ticket.name ?? '',
-                            style: AppTextStyle.normalBody
-                                .copyWith(fontWeight: FontWeight.w600)),
-                        if (ticket.brand != null)
-                          Text(ticket.brand!,
-                              style: AppTextStyle.smallBody.copyWith(
-                                  color: Colors.grey, fontSize: 11.sp)),
-                      ],
-                    ),
-                  ),
-                  Text('${price.toStringAsFixed(2)} €',
-                      style: AppTextStyle.normalBody.copyWith(
-                          decoration: TextDecoration.underline,
-                          fontSize: 14.sp)),
-                ],
-              ),
+            border: Border.all(
+              color: isExpanded
+                  ? AppColor.primaryColor.withOpacity(0.3)
+                  : Colors.grey[200]!,
             ),
           ),
-          // expanded: quantity + checkout
-          if (isExpanded)
-            Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
-              child: Container(
-                padding: EdgeInsets.all(12.r),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.grey[200]!),
+          child: Column(
+            children: [
+              // ── header ──────────────────────────────────────────
+              InkWell(
+                borderRadius: BorderRadius.circular(10.r),
+                onTap: () => setState(() {
+                  _expandedTicketIndex = isExpanded ? null : index;
+                  if (!_quantities.containsKey(index)) {
+                    _quantities[index] = inCart ? qty : 1;
+                  }
+                }),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 16.w, vertical: 14.h),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(ticket.name ?? '',
+                                style: AppTextStyle.normalBody.copyWith(
+                                    fontWeight: FontWeight.w600)),
+                            if (ticket.brand != null)
+                              Text(ticket.brand!,
+                                  style: AppTextStyle.smallBody.copyWith(
+                                      color: Colors.grey, fontSize: 11.sp)),
+                          ],
+                        ),
+                      ),
+                      // badge qty si está en carrito
+                      if (inCart)
+                        Container(
+                          margin: EdgeInsets.only(right: 8.w),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: AppColor.primaryColor,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Text('×$qty',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      Text('${price.toStringAsFixed(2)} €',
+                          style: AppTextStyle.normalBody.copyWith(
+                              decoration: TextDecoration.underline,
+                              fontSize: 14.sp)),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text('Quantità',
-                            style: AppTextStyle.smallBody
-                                .copyWith(color: Colors.grey)),
-                        const Spacer(),
-                        _qtyButton(
-                          icon: Icons.remove,
-                          onTap: qty > 1
-                              ? () =>
-                                  setState(() => _quantities[index] = qty - 1)
-                              : null,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w),
-                          child: Text('$qty',
-                              style: AppTextStyle.normalBody
-                                  .copyWith(fontWeight: FontWeight.w600)),
-                        ),
-                        _qtyButton(
-                          icon: Icons.add,
-                          onTap: () =>
-                              setState(() => _quantities[index] = qty + 1),
-                        ),
-                      ],
+              ),
+
+              // ── expanded ─────────────────────────────────────────
+              if (isExpanded)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
+                  child: Container(
+                    padding: EdgeInsets.all(12.r),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: Colors.grey[200]!),
                     ),
-                    Divider(height: 16.h, color: Colors.grey[200]),
-                    Row(
+                    child: Column(
                       children: [
-                        Text('Totale',
-                            style: AppTextStyle.smallBody
-                                .copyWith(color: Colors.grey)),
-                        Gap(8.w),
-                        Text('${total.toStringAsFixed(2)} €',
-                            style: AppTextStyle.normalBody
-                                .copyWith(fontWeight: FontWeight.w700)),
-                        const Spacer(),
-                        // FIX: botón checkout agrega al carrito Hive
-                        ValueListenableBuilder<Box<HiveCartModel>>(
-                          valueListenable:
-                              Hive.box<HiveCartModel>(AppConstants.cartBox)
-                                  .listenable(),
-                          builder: (context, box, _) {
-                            final inCart =
-                                box.values.any((e) => e.id == ticket.id);
-                            return SizedBox(
+                        Row(
+                          children: [
+                            Text('Quantità',
+                                style: AppTextStyle.smallBody
+                                    .copyWith(color: Colors.grey)),
+                            const Spacer(),
+                            _qtyButton(
+                              icon: Icons.remove,
+                              onTap: qty > 1
+                                  ? () async {
+                                      final newQty = qty - 1;
+                                      if (inCart) {
+                                        // ── actualiza carrito directamente ──
+                                        await cartBox.put(
+                                          cartKey,
+                                          HiveCartModel(
+                                            id: cartItem!.id,
+                                            name: cartItem.name,
+                                            code: cartItem.code,
+                                            thumbnail: cartItem.thumbnail,
+                                            subTotal: price * newQty,
+                                            productsQTY: newQty,
+                                          ),
+                                        );
+                                      } else {
+                                        setState(() =>
+                                            _quantities[index] = newQty);
+                                      }
+                                    }
+                                  : null,
+                            ),
+                            Padding(
+                              padding:
+                                  EdgeInsets.symmetric(horizontal: 12.w),
+                              child: Text('$qty',
+                                  style: AppTextStyle.normalBody.copyWith(
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                            _qtyButton(
+                              icon: Icons.add,
+                              onTap: () async {
+                                final newQty = qty + 1;
+                                if (inCart) {
+                                  // ── actualiza carrito directamente ──
+                                  await cartBox.put(
+                                    cartKey,
+                                    HiveCartModel(
+                                      id: cartItem!.id,
+                                      name: cartItem.name,
+                                      code: cartItem.code,
+                                      thumbnail: cartItem.thumbnail,
+                                      subTotal: price * newQty,
+                                      productsQTY: newQty,
+                                    ),
+                                  );
+                                } else {
+                                  setState(
+                                      () => _quantities[index] = newQty);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        Divider(height: 16.h, color: Colors.grey[200]),
+                        Row(
+                          children: [
+                            Text('Totale',
+                                style: AppTextStyle.smallBody
+                                    .copyWith(color: Colors.grey)),
+                            Gap(8.w),
+                            Text('${total.toStringAsFixed(2)} €',
+                                style: AppTextStyle.normalBody.copyWith(
+                                    fontWeight: FontWeight.w700)),
+                            const Spacer(),
+                            SizedBox(
                               height: 36.h,
                               child: ElevatedButton(
                                 onPressed: inCart
-                                    ? null
+                                    // ── ya en carrito: ir al tab ──
+                                    ? () {
+                                        ref
+                                            .read(selectedIndexProvider
+                                                .notifier)
+                                            .state = 3;
+                                        ref
+                                            .read(bottomTabControllerProvider)
+                                            .jumpToPage(3);
+                                      }
+                                    // ── no en carrito: agregar y navegar ──
                                     : () async {
-                                        final cartModel = HiveCartModel(
+                                        await cartBox.add(HiveCartModel(
                                           id: ticket.id,
-                                          name: ticket.name ?? 'Biglietto',
+                                          name:
+                                              ticket.name ?? 'Biglietto',
                                           code: ticket.code ?? '',
-                                          thumbnail: ticket.thumbnail ?? '',
+                                          thumbnail:
+                                              ticket.thumbnail ?? '',
                                           subTotal: price * qty,
                                           productsQTY: qty,
-                                        );
-                                        await box.add(cartModel);
-                                        // cerrar el accordion tras añadir
-                                        setState(
-                                            () => _expandedTicketIndex = null);
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                          behavior: SnackBarBehavior.floating,
-                                          content: Text(
-                                              '${ticket.name} aggiunto al carrello'),
-                                          backgroundColor: Colors.green,
                                         ));
+                                        setState(() =>
+                                            _expandedTicketIndex = null);
+                                        ref
+                                            .read(selectedIndexProvider
+                                                .notifier)
+                                            .state = 3;
+                                        ref
+                                            .read(bottomTabControllerProvider)
+                                            .jumpToPage(3);
                                       },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: inCart
-                                      ? Colors.grey
+                                      ? Colors.green
                                       : AppColor.primaryColor,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.r)),
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 20.w),
+                                      borderRadius:
+                                          BorderRadius.circular(8.r)),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20.w),
                                 ),
-                                child:
-                                    Text(inCart ? 'Nel carrello' : 'Checkout'),
+                                // texto cambia según estado
+                                child: Text(inCart
+                                    ? 'Vai al carrello'
+                                    : 'Aggiungi al carrello'),
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -451,8 +713,8 @@ class _ExploreLayoutState extends ConsumerState<ExploreLayout> {
                       ),
                     ),
                   ),
-                  IconButton(
-                      icon: const Icon(Icons.filter_list), onPressed: () {}),
+                  // IconButton(
+                  //     icon: const Icon(Icons.filter_list), onPressed: () {}),
                 ],
               ),
             ),

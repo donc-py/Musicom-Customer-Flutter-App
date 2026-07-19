@@ -3,6 +3,7 @@ import 'package:readypos_flutter/models/customers_model/customer_group_model.dar
 import 'package:readypos_flutter/models/customers_model/customer_model.dart';
 import 'package:readypos_flutter/models/draft_model/draft_model.dart';
 import 'package:readypos_flutter/models/pos_response.dart';
+import 'package:readypos_flutter/models/pos_order_model.dart';
 import 'package:readypos_flutter/services/customer_service_provider.dart';
 import 'package:readypos_flutter/services/pos_products_service_provider.dart';
 import 'package:readypos_flutter/services/pos_service_provider.dart';
@@ -250,6 +251,34 @@ class DeleteDraftController extends StateNotifier<bool> {
       }
       state = false;
       return false;
+    } catch (e) {
+      rethrow;
+    } finally {
+      state = false;
+    }
+  }
+}
+
+final posOrdersControllerProvider =
+    StateNotifierProvider<PosOrdersController, bool>((ref) {
+  return PosOrdersController(ref);
+});
+
+class PosOrdersController extends StateNotifier<bool> {
+  final Ref ref;
+  PosOrdersController(this.ref) : super(false);
+
+  List<PosOrderModel>? _orders;
+  List<PosOrderModel>? get orders => _orders;
+
+  Future<void> getOrders() async {
+    try {
+      state = true;
+      final response = await ref.read(posServiceProvider).getPosOrders();
+      if (response.statusCode == 200) {
+        final List data = response.data['data']['orders'];
+        _orders = data.map((e) => PosOrderModel.fromMap(e)).toList();
+      }
     } catch (e) {
       rethrow;
     } finally {

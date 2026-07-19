@@ -11,6 +11,7 @@ import 'package:readypos_flutter/gen/assets.gen.dart';
 import 'package:readypos_flutter/generated/l10n.dart';
 import 'package:readypos_flutter/routes.dart';
 import 'package:readypos_flutter/utils/context_less_navigation.dart';
+import 'package:readypos_flutter/views/pos/pos_orders_screen.dart';
 
 class POSAppBar extends ConsumerWidget {
   const POSAppBar({
@@ -64,7 +65,7 @@ class POSAppBar extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      S.of(context).pos,
+                      'Carrello',
                       style: AppTextStyle.title,
                     ),
                     Consumer(builder: (context, ref, _) {
@@ -91,11 +92,14 @@ class POSAppBar extends ConsumerWidget {
               ),
               InkWell(
                 onTap: () {
-                  context.nav.pushNamed(Routes.draft);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PosOrdersScreen(),
+                    ),
+                  );
                 },
                 child: Container(
-                  // height: context.isTabletLandsCape ? 80.r : 48.h,
-                  // width: context.isTabletLandsCape ? 80.r : 48.h,
                   padding: EdgeInsets.all(10.w),
                   decoration: BoxDecoration(
                     color: AdaptiveTheme.of(context).mode.isDark
@@ -103,49 +107,44 @@ class POSAppBar extends ConsumerWidget {
                         : AppColor.greyBackgroundColor,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: SvgPicture.asset(
-                    Assets.svgs.draftImg,
-                    colorFilter: AdaptiveTheme.of(context).mode.isDark
-                        ? const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
-                          )
-                        : ColorFilter.mode(
-                            Colors.black.withOpacity(0.5),
-                            BlendMode.srcIn,
-                          ),
+                  child: Icon(                           // 👈 cambia el SVG por un icono de historial
+                    Icons.receipt_long_outlined,
+                    color: AdaptiveTheme.of(context).mode.isDark
+                        ? Colors.white
+                        : Colors.black54,
+                    size: 22.r,
                   ),
                 ),
               ),
               Gap(15.w),
-              InkWell(
-                onTap: () {
-                  context.nav.pushNamed(Routes.depositPOSScreen);
-                },
-                child: Container(
-                  // height: context.isTabletLandsCape ? 80.r : 48.h,
-                  // width: context.isTabletLandsCape ? 80.r : 48.h,
-                  padding: EdgeInsets.all(10.w),
-                  decoration: BoxDecoration(
-                    color: AdaptiveTheme.of(context).mode.isDark
-                        ? AppColor.greyBackgroundColor.withOpacity(0.2)
-                        : AppColor.greyBackgroundColor,
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: SvgPicture.asset(
-                    Assets.svgs.walletAdd,
-                    colorFilter: AdaptiveTheme.of(context).mode.isDark
-                        ? const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
-                          )
-                        : ColorFilter.mode(
-                            Colors.black.withOpacity(0.5),
-                            BlendMode.srcIn,
-                          ),
-                  ),
-                ),
-              )
+              // InkWell(
+              //   onTap: () {
+              //     context.nav.pushNamed(Routes.depositPOSScreen);
+              //   },
+              //   child: Container(
+              //     // height: context.isTabletLandsCape ? 80.r : 48.h,
+              //     // width: context.isTabletLandsCape ? 80.r : 48.h,
+              //     padding: EdgeInsets.all(10.w),
+              //     decoration: BoxDecoration(
+              //       color: AdaptiveTheme.of(context).mode.isDark
+              //           ? AppColor.greyBackgroundColor.withOpacity(0.2)
+              //           : AppColor.greyBackgroundColor,
+              //       borderRadius: BorderRadius.circular(8.r),
+              //     ),
+              //     child: SvgPicture.asset(
+              //       Assets.svgs.walletAdd,
+              //       colorFilter: AdaptiveTheme.of(context).mode.isDark
+              //           ? const ColorFilter.mode(
+              //               Colors.white,
+              //               BlendMode.srcIn,
+              //             )
+              //           : ColorFilter.mode(
+              //               Colors.black.withOpacity(0.5),
+              //               BlendMode.srcIn,
+              //             ),
+              //     ),
+              //   ),
+              // )
             ],
           ),
         ],

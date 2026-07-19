@@ -17,6 +17,7 @@ class AppConstants {
   static const String addCustomer = '$baseUrl/api/customer/store';
   static const String posStore = '$baseUrl/api/pos/store';
   static const String report = '$baseUrl/api/reports';
+  static const String posOrders = '$baseUrl/api/pos/orders';
   // category
   static const String categories = '$baseUrl/api/categories';
   static const String parentCategory =
